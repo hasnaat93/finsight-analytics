@@ -1,4 +1,4 @@
-.PHONY: install db generate init etl test test-sql status dashboard all
+.PHONY: install db generate init etl test test-sql status benchmark dashboard all
 
 PYTHON ?= python
 SCALE ?= 1.0
@@ -27,6 +27,9 @@ test-sql:  ## run the SQL assertions against the loaded warehouse
 
 status:  ## what is loaded, what was rejected
 	$(PYTHON) -m etl.run_pipeline status
+
+benchmark:  ## time key queries with and without their index or mart
+	$(PYTHON) -m etl.benchmark
 
 dashboard:  ## build the web preview at site/index.html
 	$(PYTHON) -m dashboard.build --out site/index.html

@@ -51,6 +51,10 @@ jobs:
         run: |
           python -m etl.run_pipeline run --batch 2025-06 --reload
           make test-sql
+      - name: Headline totals from the warehouse
+        run: PGPASSWORD=finsight psql -h localhost -U finsight -d finsight -x -f sql/analysis/00_headline_totals.sql
+      - name: Measure the indexes and the pre-aggregated mart
+        run: python -m etl.benchmark
       - name: Build the web preview
         run: make dashboard
       - uses: actions/upload-pages-artifact@v3
