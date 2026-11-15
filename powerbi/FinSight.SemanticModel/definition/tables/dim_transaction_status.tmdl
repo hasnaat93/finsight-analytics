@@ -1,0 +1,39 @@
+/// Outcome of a payment attempt and, if declined, why.
+table dim_transaction_status
+	lineageTag: 926e1b75-7ace-513c-b71b-1a44c33ebf7b
+
+	column status_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9523003a-6630-588d-ac2e-e122b5c16c2e
+		summarizeBy: none
+		sourceColumn: status_key
+
+	column status
+		dataType: string
+		lineageTag: 0c041fbe-f3ea-5d21-b7d0-821b63c4549f
+		summarizeBy: none
+		sourceColumn: status
+
+	column decline_reason
+		dataType: string
+		lineageTag: c3576cef-094b-51dd-ae85-19261f7d9c7e
+		summarizeBy: none
+		sourceColumn: decline_reason
+
+	column is_success
+		dataType: boolean
+		lineageTag: c9a4e9f0-7fd9-51dd-841b-a422fdc64c7b
+		summarizeBy: none
+		sourceColumn: is_success
+
+	partition dim_transaction_status = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "dim_transaction_status"]}[Data]
+				in
+				    Data
+

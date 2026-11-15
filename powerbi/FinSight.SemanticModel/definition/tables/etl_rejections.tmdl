@@ -1,0 +1,53 @@
+/// Rows the pipeline quarantined, by monthly batch, file and validation rule.
+table etl_rejections
+	lineageTag: 3b39a496-ad15-52c2-916d-b7f4b61a8f49
+
+	column batch_id
+		dataType: string
+		lineageTag: f530b510-1415-539d-98bf-109d72fc1d90
+		summarizeBy: none
+		sourceColumn: batch_id
+
+	column batch_month
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 4dbb396b-d667-54ee-9137-948b00b74191
+		summarizeBy: none
+		sourceColumn: batch_month
+
+	/// Source file the row came from
+	column entity
+		dataType: string
+		lineageTag: 0abadd0f-a069-524e-a3cd-f3ea62ac6f0d
+		summarizeBy: none
+		sourceColumn: entity
+
+	column rule_name
+		dataType: string
+		lineageTag: 8095dc1c-0a5f-5f66-8c0f-e14bec86a783
+		summarizeBy: none
+		sourceColumn: rule_name
+
+	column reason
+		dataType: string
+		lineageTag: cd0db0a8-f64a-5f3e-a03a-e577cf614bc0
+		summarizeBy: none
+		sourceColumn: reason
+
+	column rejected_rows
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 24bf12b7-0171-5711-bfdf-48651b71db0e
+		summarizeBy: none
+		sourceColumn: rejected_rows
+
+	partition etl_rejections = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "etl_rejections"]}[Data]
+				in
+				    Data
+

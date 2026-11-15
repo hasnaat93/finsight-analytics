@@ -9,3 +9,5 @@ data/raw/
 site/
 # Power BI local cache
 powerbi/**/.pbi/
+powerbi/tools/**/bin/
+powerbi/tools/**/obj/

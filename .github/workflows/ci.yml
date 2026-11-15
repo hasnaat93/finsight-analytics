@@ -40,7 +40,7 @@ jobs:
       - name: Lint and tests (unit, plus integration on PostgreSQL)
         run: make test
       - name: Generate three years of source data
-        run: make generate SCALE=0.4
+        run: make generate SCALE=0.5
       - name: Load the warehouse
         run: make init etl
       - name: SQL assertions
@@ -56,6 +56,16 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+
+  powerbi-model:
+    name: Power BI semantic model (TMDL) is well formed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet run --project powerbi/tools/validate-model -- powerbi/FinSight.SemanticModel/definition
 
   publish:
     name: Publish the web preview to GitHub Pages

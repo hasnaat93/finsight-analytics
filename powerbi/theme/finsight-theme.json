@@ -1,0 +1,97 @@
+{
+  "name": "FinSight",
+  "dataColors": [
+    "#1F6FD6",
+    "#C2571B",
+    "#1B8E5A",
+    "#7A5AD9",
+    "#B8860B",
+    "#2A9DB5",
+    "#C0392B",
+    "#5C6B8A"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1B2437",
+  "tableAccent": "#1F6FD6",
+  "good": "#1B8E5A",
+  "neutral": "#B8860B",
+  "bad": "#C0392B",
+  "maximum": "#1F6FD6",
+  "center": "#C9D6EE",
+  "minimum": "#EEF3FB",
+  "textClasses": {
+    "callout": {
+      "fontSize": 28,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1B2437"
+    },
+    "title": {
+      "fontSize": 12,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1B2437"
+    },
+    "header": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1B2437"
+    },
+    "label": {
+      "fontSize": 10,
+      "fontFace": "Segoe UI",
+      "color": "#4A5672"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#DDE3EE"
+              }
+            },
+            "radius": 6
+          }
+        ],
+        "title": [
+          {
+            "show": true,
+            "fontSize": 11,
+            "fontColor": {
+              "solid": {
+                "color": "#1B2437"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F4F6FA"
+              }
+            },
+            "transparency": 0
+          }
+        ]
+      }
+    }
+  }
+}

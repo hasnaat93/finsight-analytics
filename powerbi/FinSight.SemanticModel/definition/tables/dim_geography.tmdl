@@ -1,0 +1,62 @@
+/// Country, region and continent of the merchant that took the payment.
+table dim_geography
+	lineageTag: 8ec46a51-061b-5960-b14c-0ef64e85a21b
+
+	column geography_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 43c2ed4e-0c05-53d7-b47e-57ffa6bc3bc0
+		summarizeBy: none
+		sourceColumn: geography_key
+
+	column country_code
+		dataType: string
+		lineageTag: 5bad6f00-8b7a-5c23-a35f-26788cdec5c4
+		summarizeBy: none
+		sourceColumn: country_code
+
+	column country
+		dataType: string
+		dataCategory: Country
+		lineageTag: ec71a044-6877-5dff-b2c3-d2f2da63c25c
+		summarizeBy: none
+		sourceColumn: country
+
+	column region
+		dataType: string
+		lineageTag: 823f5984-4a71-5cd6-a4f4-313fbf739281
+		summarizeBy: none
+		sourceColumn: region
+
+	column continent
+		dataType: string
+		dataCategory: Continent
+		lineageTag: de46df1f-6c56-58ba-b079-80fc374974be
+		summarizeBy: none
+		sourceColumn: continent
+
+	hierarchy Geography
+		lineageTag: 3dfa2f94-e528-52e7-8b12-168b451e5f24
+
+		level Continent
+			lineageTag: 7b593dc7-a219-5681-8d9f-f768bfc3ae0e
+			column: continent
+
+		level Region
+			lineageTag: e308ff62-21c6-55f8-bfab-44494a4ccdfe
+			column: region
+
+		level Country
+			lineageTag: e689a869-5fa8-5edf-91f0-66c1d52b24b3
+			column: country
+
+	partition dim_geography = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "dim_geography"]}[Data]
+				in
+				    Data
+

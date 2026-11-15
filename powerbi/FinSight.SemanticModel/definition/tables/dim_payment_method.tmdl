@@ -1,0 +1,39 @@
+/// How the customer paid.
+table dim_payment_method
+	lineageTag: 7464502f-9894-5641-8d71-c884051c51e8
+
+	column method_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 34050dca-1b08-5a25-afa1-ce4678c30b87
+		summarizeBy: none
+		sourceColumn: method_key
+
+	column payment_method
+		dataType: string
+		lineageTag: d9c56af2-f350-5f89-946a-66caafe3a031
+		summarizeBy: none
+		sourceColumn: payment_method
+
+	column card_brand
+		dataType: string
+		lineageTag: dc4b7a3b-d903-5f51-ba28-188ad3d9714f
+		summarizeBy: none
+		sourceColumn: card_brand
+
+	column card_type
+		dataType: string
+		lineageTag: bec94ad1-56b2-5261-98b8-5dd9336792ef
+		summarizeBy: none
+		sourceColumn: card_type
+
+	partition dim_payment_method = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "dim_payment_method"]}[Data]
+				in
+				    Data
+

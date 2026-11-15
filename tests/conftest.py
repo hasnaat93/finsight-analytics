@@ -96,7 +96,7 @@ def generated(tmp_path_factory):
     """A small generated data set (12 months), fully loaded. Shared and read-only."""
     reset_database()
     raw = tmp_path_factory.mktemp("generated")
-    result = generate(GeneratorConfig(raw, months=12, scale=0.03, seed=42))
+    result = generate(GeneratorConfig(raw, months=12, scale=0.05, seed=42))
     lab = Lab(raw)
     lab.results = run_pipeline.run_pending(lab.settings)
     lab.conn.execute("refresh materialized view mart.daily_merchant_summary")

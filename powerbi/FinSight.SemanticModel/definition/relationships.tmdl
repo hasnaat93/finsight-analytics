@@ -1,0 +1,96 @@
+relationship e6e368d6-fb6c-59ff-9576-fd52ac353b17
+	fromColumn: fact_transaction.date_key
+	toColumn: dim_date.date_key
+
+relationship 2e5b6fd8-6767-5910-a37f-d19f0e2aba9f
+	fromColumn: fact_transaction.merchant_key
+	toColumn: dim_merchant.merchant_key
+
+relationship 2a052c31-661e-52b6-bab2-54bc10bf5656
+	fromColumn: fact_transaction.customer_key
+	toColumn: dim_customer.customer_key
+
+relationship 00ec480e-6206-5b9f-8440-37d402418b34
+	fromColumn: fact_transaction.method_key
+	toColumn: dim_payment_method.method_key
+
+relationship 9d582668-1c21-5c45-a824-bfddb2b2357e
+	fromColumn: fact_transaction.channel_key
+	toColumn: dim_channel.channel_key
+
+relationship a8161c4d-5636-574f-a512-e6431c467b3a
+	fromColumn: fact_transaction.geography_key
+	toColumn: dim_geography.geography_key
+
+relationship a81ee769-0197-5e01-86c1-10017844ce5a
+	fromColumn: fact_transaction.currency_key
+	toColumn: dim_currency.currency_key
+
+relationship 0e33c4a1-7ff6-51a5-9828-02cb7d15e8d1
+	fromColumn: fact_transaction.status_key
+	toColumn: dim_transaction_status.status_key
+
+relationship 461ae5d1-b388-59cc-ad8a-bab1bae3bede
+	fromColumn: fact_refund.date_key
+	toColumn: dim_date.date_key
+
+relationship 1534e67a-6d32-58ab-a289-9170fef064f2
+	fromColumn: fact_refund.merchant_key
+	toColumn: dim_merchant.merchant_key
+
+relationship 87901cd1-2c5e-546c-9ef2-4af64f611a40
+	fromColumn: fact_refund.geography_key
+	toColumn: dim_geography.geography_key
+
+relationship 79c56277-e2b2-52fc-a392-a32ed1779b55
+	fromColumn: fact_refund.currency_key
+	toColumn: dim_currency.currency_key
+
+relationship c72fffeb-72ce-5455-bfe9-a2478bc841ef
+	fromColumn: fact_chargeback.date_key
+	toColumn: dim_date.date_key
+
+relationship f9cfc7e1-fa49-50ee-941e-3b70b9d80530
+	fromColumn: fact_chargeback.merchant_key
+	toColumn: dim_merchant.merchant_key
+
+relationship c28ad1dd-96e2-59b6-b7af-94ff7fc5319f
+	fromColumn: fact_chargeback.geography_key
+	toColumn: dim_geography.geography_key
+
+relationship 94ac9506-7efa-5ec0-8503-be962308fca0
+	fromColumn: fact_chargeback.currency_key
+	toColumn: dim_currency.currency_key
+
+relationship cab2dfbf-af42-5d20-8271-608c60fa6cd9
+	fromColumn: fact_fee.date_key
+	toColumn: dim_date.date_key
+
+relationship ede2b022-a0d6-519c-a809-639b2700646b
+	fromColumn: fact_fee.merchant_key
+	toColumn: dim_merchant.merchant_key
+
+relationship f14a4d51-7549-5489-88ea-b4b3c32c5dc5
+	fromColumn: fact_fee.geography_key
+	toColumn: dim_geography.geography_key
+
+relationship bdf308aa-b250-5e69-8f03-a66faab4291c
+	fromColumn: fact_fee.currency_key
+	toColumn: dim_currency.currency_key
+
+relationship a438474d-b4ff-5403-98f5-3b6f10fbe03d
+	fromColumn: fact_settlement.date_key
+	toColumn: dim_date.date_key
+
+relationship d1361066-cdd3-5f0d-a664-9c27405a2e52
+	fromColumn: fact_settlement.merchant_key
+	toColumn: dim_merchant.merchant_key
+
+relationship f51ffbe1-ed26-531a-8597-af57276409dc
+	fromColumn: fact_settlement.geography_key
+	toColumn: dim_geography.geography_key
+
+relationship bb815e8b-c5ce-56b1-b508-77b55060d9af
+	fromColumn: fact_settlement.currency_key
+	toColumn: dim_currency.currency_key
+

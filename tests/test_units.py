@@ -111,7 +111,7 @@ def test_the_generator_is_deterministic_and_reports_what_it_injected(tmp_path):
     assert _digest(tmp_path / "a") != _digest(tmp_path / "c")
 
     assert first.batches == ["2023-11", "2023-12", "2024-01"]
-    assert first.rows["transactions.csv"] > 1000
+    assert first.rows["transactions.csv"] > 500
     assert first.rows["fees.csv"] < first.rows["transactions.csv"]
     injected = {defect for (_batch, _file, defect) in first.defects}
     assert {"duplicate_transaction_id", "missing_customer"} <= injected

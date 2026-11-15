@@ -1,0 +1,27 @@
+/// Where the payment was made.
+table dim_channel
+	lineageTag: 12239343-3746-51cc-8bec-a68fb5004522
+
+	column channel_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a3bd1a65-5e02-5ff0-bbff-48ecc84f9696
+		summarizeBy: none
+		sourceColumn: channel_key
+
+	column channel
+		dataType: string
+		lineageTag: 68947a97-dce3-5b43-8f19-09ac18dbdc4f
+		summarizeBy: none
+		sourceColumn: channel
+
+	partition dim_channel = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "dim_channel"]}[Data]
+				in
+				    Data
+

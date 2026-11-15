@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "FinSight"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "83c006f4-824a-5d6a-b51c-ee739d462a12"
+  }
+}

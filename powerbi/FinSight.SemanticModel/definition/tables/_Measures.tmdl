@@ -1,0 +1,359 @@
+/// Every measure of the model, grouped into display folders. The table holds no data.
+table _Measures
+	lineageTag: af897a1b-137f-5e0d-a9fd-d3bb15afe870
+
+	/// Value of captured payments, in USD.
+	measure 'Total Transaction Value' = CALCULATE ( SUM ( fact_transaction[amount_reporting] ), fact_transaction[is_captured] = TRUE () )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Volume
+		lineageTag: 3cdb4885-4269-540d-a65b-ee1f89f82a38
+
+	/// Number of payment attempts, approved or not.
+	measure 'Transaction Count' = COUNTROWS ( fact_transaction )
+		formatString: #,0
+		displayFolder: Volume
+		lineageTag: 6d31f681-5ff4-5745-bbeb-f11f35df6032
+
+	/// Payment attempts the issuer approved.
+	measure 'Approved Transactions' = CALCULATE ( [Transaction Count], fact_transaction[is_approved] = TRUE () )
+		formatString: #,0
+		displayFolder: Volume
+		lineageTag: 833260d0-61be-5933-a726-8eeb252e61fc
+
+	/// Approved payments that were captured, so money moved.
+	measure 'Captured Transactions' = CALCULATE ( [Transaction Count], fact_transaction[is_captured] = TRUE () )
+		formatString: #,0
+		displayFolder: Volume
+		lineageTag: c259129d-fb89-5a5a-9e7b-34086a454086
+
+	/// Payment attempts the issuer declined.
+	measure 'Declined Transactions' = CALCULATE ( [Transaction Count], fact_transaction[is_approved] = FALSE () )
+		formatString: #,0
+		displayFolder: Volume
+		lineageTag: b7996362-31a5-5704-8624-deac4de6fc1a
+
+	/// Approved payment attempts as a share of all attempts.
+	measure 'Approval Rate %' = DIVIDE ( [Approved Transactions], [Transaction Count] )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Volume
+		lineageTag: 01643c5c-73b6-51ae-9ace-92ad76551e92
+
+	/// Average value of a captured payment, in USD.
+	measure 'Average Ticket Size' = DIVIDE ( [Total Transaction Value], [Captured Transactions] )
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Volume
+		lineageTag: e023cbdf-8f8b-50e8-aa89-81dda1a6c353
+
+	/// Fees charged to merchants on captured payments, in USD.
+	measure 'Fee Revenue' = SUM ( fact_fee[fee_amount] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Revenue
+		lineageTag: f1809be2-21ae-5b0e-9c4f-f2470dc61da7
+
+	/// Interchange paid to issuers plus scheme fees paid to card networks, in USD.
+	measure 'Processing Cost' = SUM ( fact_fee[interchange_cost] ) + SUM ( fact_fee[scheme_cost] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Revenue
+		lineageTag: 736cea29-579a-5574-82d6-dae8b7cfb28a
+
+	/// Value of disputes the merchant lost, in USD.
+	measure 'Chargeback Losses' = CALCULATE ( SUM ( fact_chargeback[chargeback_amount] ), fact_chargeback[outcome] = "LOST" )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Revenue
+		lineageTag: 718ce729-7ee5-5ed1-838c-6679947eee1e
+
+	/// Fee revenue less processing cost and lost disputes.
+	measure 'Net Revenue' = [Fee Revenue] - [Processing Cost] - [Chargeback Losses]
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Revenue
+		lineageTag: cbe39430-7b49-5652-b59d-a69450aa9dc1
+
+	/// Fee revenue as a share of transaction value.
+	measure 'Take Rate %' = DIVIDE ( [Fee Revenue], [Total Transaction Value] )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Revenue
+		lineageTag: 0e263fbc-c4c2-58ab-a40f-8a893a239bc2
+
+	/// Net revenue as a share of transaction value.
+	measure 'Net Take Rate %' = DIVIDE ( [Net Revenue], [Total Transaction Value] )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Revenue
+		lineageTag: 4fedf20f-8346-535d-a796-5c1b5b0bc2b1
+
+	/// Value refunded to customers, in USD.
+	measure 'Total Refunds' = SUM ( fact_refund[refund_amount] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Risk
+		lineageTag: c51b6a92-5c00-529d-9d0f-a59e5895b5e9
+
+	/// Number of refunds.
+	measure 'Refund Count' = COUNTROWS ( fact_refund )
+		formatString: #,0
+		displayFolder: Risk
+		lineageTag: 8e1e8443-a2df-55fa-bf0b-5f388ce94576
+
+	/// Refunded value as a share of transaction value.
+	measure 'Refund Rate %' = DIVIDE ( [Total Refunds], [Total Transaction Value] )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Risk
+		lineageTag: 753e9e08-49dd-5e36-be4a-20d3df3e7a40
+
+	/// Value disputed by cardholders, in USD, whatever the outcome.
+	measure 'Total Chargebacks' = SUM ( fact_chargeback[chargeback_amount] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Risk
+		lineageTag: ab3dbe6c-265e-54cf-bc74-0f88f7371cb4
+
+	/// Number of disputes.
+	measure 'Chargeback Count' = COUNTROWS ( fact_chargeback )
+		formatString: #,0
+		displayFolder: Risk
+		lineageTag: 73e92632-c8fc-50e3-b2b8-05c9b365f775
+
+	/// Disputes as a share of approved payments.
+	measure 'Chargeback Rate %' = DIVIDE ( [Chargeback Count], [Approved Transactions] )
+		formatString: 0.000%;-0.000%;0.000%
+		displayFolder: Risk
+		lineageTag: 0e19845b-1ce7-5646-8d13-ba8a5aeed1c8
+
+	/// Share of decided disputes the merchant lost. Pending disputes are excluded.
+	measure 'Chargebacks Lost %' =
+			DIVIDE (
+			    CALCULATE ( [Chargeback Count], fact_chargeback[outcome] = "LOST" ),
+			    CALCULATE ( [Chargeback Count], fact_chargeback[outcome] IN { "LOST", "WON" } )
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Risk
+		lineageTag: 33daddb6-3c35-57bd-8754-6acb21ffda24
+
+	/// Declined payment attempts as a share of all attempts.
+	measure 'Decline Rate %' = DIVIDE ( [Declined Transactions], [Transaction Count] )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Risk
+		lineageTag: 2e65a222-0128-5e86-a63a-1caef0f35210
+
+	/// Transaction value, month to date.
+	measure 'TPV MTD' = TOTALMTD ( [Total Transaction Value], dim_date[date] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Time Intelligence
+		lineageTag: e4af3c2d-1a2e-53e1-bc8b-0de031368182
+
+	/// Transaction value, quarter to date.
+	measure 'TPV QTD' = TOTALQTD ( [Total Transaction Value], dim_date[date] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Time Intelligence
+		lineageTag: 3813b883-5b10-510c-a327-b31e1719f000
+
+	/// Transaction value, year to date.
+	measure 'TPV YTD' = TOTALYTD ( [Total Transaction Value], dim_date[date] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Time Intelligence
+		lineageTag: 7250f648-acc8-5e5a-9934-203911d51d43
+
+	/// Transaction value in the same period of the previous year.
+	measure 'TPV PY' = CALCULATE ( [Total Transaction Value], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Time Intelligence
+		lineageTag: 71b77659-2c7c-5f34-b90a-74d5089a5643
+
+	/// Change in transaction value against the same period of the previous year.
+	measure 'TPV YoY %' = DIVIDE ( [Total Transaction Value] - [TPV PY], [TPV PY] )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Time Intelligence
+		lineageTag: 94683f6f-2659-5c02-8d47-86a73893b716
+
+	/// Transaction value over the 30 days ending on the last visible date.
+	measure 'TPV Rolling 30 Days' =
+			CALCULATE (
+			    [Total Transaction Value],
+			    DATESINPERIOD ( dim_date[date], MAX ( dim_date[date] ), -30, DAY )
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Time Intelligence
+		lineageTag: fd48ad88-8b73-5683-beef-9a243658cfb9
+
+	/// Net revenue in the same period of the previous year.
+	measure 'Net Revenue PY' = CALCULATE ( [Net Revenue], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Time Intelligence
+		lineageTag: d0642901-0ade-572d-af67-2626ac9cf024
+
+	/// Change in net revenue against the same period of the previous year.
+	measure 'Net Revenue YoY %' = DIVIDE ( [Net Revenue] - [Net Revenue PY], [Net Revenue PY] )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Time Intelligence
+		lineageTag: 344fbe58-1d6c-599b-9430-161963c8e922
+
+	/// Merchants with at least one captured payment. Counts merchants, not their versions.
+	measure 'Active Merchants' =
+			COUNTROWS (
+			    FILTER (
+			        VALUES ( dim_merchant[merchant_id] ),
+			        dim_merchant[merchant_id] <> "UNKNOWN" && [Captured Transactions] > 0
+			    )
+			)
+		formatString: #,0
+		displayFolder: Merchant
+		lineageTag: 8c83c7d3-4ce8-55c8-b4c2-dd1bd26abcfc
+
+	/// Rank of the merchant by transaction value among the merchants in view.
+	measure 'Merchant TPV Rank' =
+			IF (
+			    HASONEVALUE ( dim_merchant[merchant_name] ),
+			    RANKX ( ALLSELECTED ( dim_merchant[merchant_name] ), [Total Transaction Value], , DESC )
+			)
+		formatString: #,0
+		displayFolder: Merchant
+		lineageTag: e30a34a3-8d85-5448-9cad-9dbc33524151
+
+	/// Merchants whose transaction value fell more than 25% against the previous year.
+	measure 'At-Risk Merchants' =
+			COUNTROWS (
+			    FILTER (
+			        VALUES ( dim_merchant[merchant_id] ),
+			        NOT ISBLANK ( [TPV PY] ) && [TPV YoY %] < -0.25
+			    )
+			)
+		formatString: #,0
+		displayFolder: Merchant
+		lineageTag: b6720ee2-996c-5ea5-853b-4049076514bc
+
+	/// Share of transaction value produced by the ten largest merchants in view.
+	measure 'Top 10 Merchant Share %' =
+			VAR Top10 =
+			    TOPN ( 10, ALLSELECTED ( dim_merchant[merchant_name] ), [Total Transaction Value] )
+			RETURN
+			    DIVIDE (
+			        CALCULATE ( [Total Transaction Value], Top10 ),
+			        CALCULATE ( [Total Transaction Value], ALLSELECTED ( dim_merchant[merchant_name] ) )
+			    )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Merchant
+		lineageTag: 1598fe25-6780-5f95-9dae-a3d6f75356d4
+
+	/// Transaction value of the merchant as a share of all merchants in view.
+	measure 'Merchant Share of TPV %' =
+			DIVIDE (
+			    [Total Transaction Value],
+			    CALCULATE ( [Total Transaction Value], ALLSELECTED ( dim_merchant ) )
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Merchant
+		lineageTag: 2fbf4d2f-4f77-5186-a164-ae038f2fac9b
+
+	/// What the warehouse calculates merchants should have been paid, in USD.
+	measure 'Expected Payout' = SUM ( fact_settlement[expected_payout] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Settlement
+		lineageTag: a6e5ebaf-1881-55b2-9ac3-c8236299f166
+
+	/// What the source system says merchants were paid, in USD.
+	measure 'Actual Payout' = SUM ( fact_settlement[net_payout] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Settlement
+		lineageTag: 98d5cd2e-bcdf-5cb3-9b77-eeed1246d2d0
+
+	/// Actual payout less expected payout. Negative means merchants were underpaid.
+	measure 'Settlement Variance' = [Actual Payout] - [Expected Payout]
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Settlement
+		lineageTag: 074be912-574e-5f55-9330-3319c9b166fc
+
+	/// Sum of the size of every variance, so over- and underpayments do not cancel.
+	measure 'Absolute Settlement Variance' = SUMX ( fact_settlement, ABS ( fact_settlement[variance] ) )
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Settlement
+		lineageTag: d63a4296-bf4d-5054-ad21-f941c6204246
+
+	/// Number of merchant payouts.
+	measure 'Settlement Batches' = COUNTROWS ( fact_settlement )
+		formatString: #,0
+		displayFolder: Settlement
+		lineageTag: 17980609-ec7e-52f3-bad3-e0b07e3570da
+
+	/// Payouts that differ from the expected payout.
+	measure 'Unreconciled Batches' = CALCULATE ( [Settlement Batches], fact_settlement[is_reconciled] = FALSE () )
+		formatString: #,0
+		displayFolder: Settlement
+		lineageTag: 38a5ca6d-462d-57e1-8c46-02714b5689ad
+
+	/// Share of payouts that match the expected payout exactly.
+	measure 'Reconciliation Rate %' = 1 - DIVIDE ( [Unreconciled Batches], [Settlement Batches] )
+		formatString: 0.000%;-0.000%;0.000%
+		displayFolder: Settlement
+		lineageTag: 3c927f1f-7aa9-5610-ab21-c62b99758c97
+
+	/// Rows in the source files of the loaded batches.
+	measure 'Rows Delivered' = SUM ( etl_batches[rows_delivered] )
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: bfa98df3-2682-52e9-94e0-dc07037d676d
+
+	/// Rows quarantined by a validation rule.
+	measure 'Rows Rejected' = SUM ( etl_rejections[rejected_rows] )
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: 7c80627c-db44-55dc-a18a-ad14847fa735
+
+	/// Quarantined rows as a share of delivered rows.
+	measure 'Rejection Rate %' = DIVIDE ( SUM ( etl_batches[rows_rejected] ), [Rows Delivered] )
+		formatString: 0.000%;-0.000%;0.000%
+		displayFolder: Data Quality
+		lineageTag: cb66aa63-e1d0-591a-81ff-80daec120f60
+
+	/// Monthly batches loaded into the warehouse.
+	measure 'Batches Loaded' = COUNTROWS ( etl_batches )
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: b5626350-576b-5469-96ad-4c7e6ebedbca
+
+	/// Reconciliation controls that balanced, as a share of controls run.
+	measure 'Controls Passed %' = DIVIDE ( SUM ( etl_batches[controls_passed] ), SUM ( etl_batches[controls_run] ) )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Data Quality
+		lineageTag: 2396d719-2fe6-546b-8b20-543b3ff9b0c4
+
+	/// When the most recent batch finished loading.
+	measure 'Last Refresh' = MAX ( etl_batches[loaded_at] )
+		formatString: General Date
+		displayFolder: Data Quality
+		lineageTag: 17d89b5f-e5ee-53ef-86f7-b3e6eda01ec2
+
+	/// The measure chosen in the Metric Selector slicer.
+	measure 'Selected KPI' =
+			SWITCH (
+			    SELECTEDVALUE ( 'Metric Selector'[Metric] ),
+			    "Transaction Value", [Total Transaction Value],
+			    "Net Revenue", [Net Revenue],
+			    "Transactions", [Transaction Count],
+			    [Total Transaction Value]
+			)
+		formatString: #,0
+		displayFolder: Report Helpers
+		lineageTag: 206c67dc-c76f-5576-84da-051213c9ba7b
+
+	/// Green when transaction value is up on the previous year, red when down. For conditional formatting.
+	measure 'KPI Colour' = IF ( [TPV YoY %] >= 0, "#1B8E5A", "#C0392B" )
+		displayFolder: Report Helpers
+		lineageTag: 48754b70-3210-5dde-9654-023cdd79d63c
+
+	/// Chart title that names the selected year.
+	measure 'Dynamic Title' = "Transaction value: " & SELECTEDVALUE ( dim_date[year], "all years" )
+		displayFolder: Report Helpers
+		lineageTag: b753dadb-32a2-5428-8364-6a1391b4884b
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 4eba8213-201f-57a5-8d32-d10b6bdd487a
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows({}, type table [Placeholder = text])
+				in
+				    Source
+

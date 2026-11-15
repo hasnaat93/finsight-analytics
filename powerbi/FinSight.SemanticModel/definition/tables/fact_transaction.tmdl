@@ -1,0 +1,121 @@
+/// One row per payment attempt. Amounts are in USD at the rate of the payment date.
+table fact_transaction
+	lineageTag: d8f2bd6f-3c22-5860-a64b-1fc8beb6c8fb
+
+	column transaction_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a291e4cb-5f86-5ebf-b586-9cbf2896e057
+		summarizeBy: none
+		sourceColumn: transaction_key
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 28026d15-b8d4-5ae8-befd-dd3164f7c548
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column merchant_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0084c811-c341-53c8-97eb-5f985937a7e4
+		summarizeBy: none
+		sourceColumn: merchant_key
+
+	column customer_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d5c3e865-b844-5e1b-9570-05a6e2d3102b
+		summarizeBy: none
+		sourceColumn: customer_key
+
+	column method_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 46abec49-8667-515f-ae77-e146e00d4f0d
+		summarizeBy: none
+		sourceColumn: method_key
+
+	column channel_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: db74fa4b-2ae0-5b98-87df-56005143e77e
+		summarizeBy: none
+		sourceColumn: channel_key
+
+	column geography_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 07a40b3b-d2ee-56ab-8075-738270819c85
+		summarizeBy: none
+		sourceColumn: geography_key
+
+	column currency_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c619c519-8552-5c02-896b-265bddfc4f3e
+		summarizeBy: none
+		sourceColumn: currency_key
+
+	column status_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: dfe8981c-206c-5416-97ee-58e2f602202f
+		summarizeBy: none
+		sourceColumn: status_key
+
+	/// Hour of the payment, 0 to 23, UTC
+	column hour_of_day
+		dataType: int64
+		formatString: 0
+		lineageTag: aec266fd-4af8-5672-9e62-8ee2a96fc798
+		summarizeBy: none
+		sourceColumn: hour_of_day
+
+	column amount_original
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 50cf0655-5b6f-5af2-be85-f8a8bf5bd3ce
+		summarizeBy: none
+		sourceColumn: amount_original
+
+	column amount_reporting
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 1802a428-d349-52c2-b662-a60369295823
+		summarizeBy: none
+		sourceColumn: amount_reporting
+
+	column is_approved
+		dataType: boolean
+		lineageTag: b0ea3659-ff70-5d7f-bace-4f5011bf0fb2
+		summarizeBy: none
+		sourceColumn: is_approved
+
+	column is_captured
+		dataType: boolean
+		lineageTag: 0bbdabf7-825d-5ea0-9b07-0f71e8e2433c
+		summarizeBy: none
+		sourceColumn: is_captured
+
+	partition fact_transaction = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "fact_transaction"]}[Data]
+				in
+				    Data
+

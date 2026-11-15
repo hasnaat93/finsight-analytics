@@ -1,0 +1,119 @@
+/// Merchants, one row per version (slowly changing dimension, type 2). A payment joins to the version in force when it was made.
+table dim_merchant
+	lineageTag: 8ddc2357-d2c0-5b4f-906d-2ef1340cc15e
+
+	column merchant_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4cf6c8ea-6480-51e3-bc4c-1199b1d6a476
+		summarizeBy: none
+		sourceColumn: merchant_key
+
+	/// Business key; the same across versions
+	column merchant_id
+		dataType: string
+		lineageTag: de7546a2-4fc6-5be8-a98e-c612439a477c
+		summarizeBy: none
+		sourceColumn: merchant_id
+
+	column merchant_name
+		dataType: string
+		lineageTag: 5511df54-a43e-599b-b5b3-d1283ba9634c
+		summarizeBy: none
+		sourceColumn: merchant_name
+
+	column category
+		dataType: string
+		lineageTag: db40b208-9ba9-5676-9f69-5d04130100a1
+		summarizeBy: none
+		sourceColumn: category
+
+	/// Merchant category code
+	column mcc
+		dataType: string
+		lineageTag: d8b7d2f4-e0fb-537f-b4c5-0264e99ee250
+		summarizeBy: none
+		sourceColumn: mcc
+
+	column country
+		dataType: string
+		dataCategory: Country
+		lineageTag: b7c8601b-129e-5ce9-93a6-d3f5a5036856
+		summarizeBy: none
+		sourceColumn: country
+
+	column region
+		dataType: string
+		lineageTag: 69afb1a1-0062-5067-9650-807315a5eb76
+		summarizeBy: none
+		sourceColumn: region
+
+	column risk_tier
+		dataType: string
+		lineageTag: 4329ef44-7bd9-5cb6-846b-27efa7511ab3
+		summarizeBy: none
+		sourceColumn: risk_tier
+
+	column pricing_plan
+		dataType: string
+		lineageTag: 1a045565-1a19-553e-afd8-56f14661069b
+		summarizeBy: none
+		sourceColumn: pricing_plan
+
+	column status
+		dataType: string
+		lineageTag: 5cf2ae09-2530-57c0-a037-6f56f822f358
+		summarizeBy: none
+		sourceColumn: status
+
+	column onboarding_date
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: b33fcf84-6f3f-56fe-93fe-fee2db492909
+		summarizeBy: none
+		sourceColumn: onboarding_date
+
+	column valid_from
+		dataType: dateTime
+		isHidden
+		formatString: Short Date
+		lineageTag: 0a191f9f-a2cc-597a-89ac-12f991c9d8b9
+		summarizeBy: none
+		sourceColumn: valid_from
+
+	column valid_to
+		dataType: dateTime
+		isHidden
+		formatString: Short Date
+		lineageTag: 248c11f1-919f-5804-a811-198ec2cae55e
+		summarizeBy: none
+		sourceColumn: valid_to
+
+	/// True for the latest version of the merchant
+	column is_current
+		dataType: boolean
+		lineageTag: 436bfff2-604a-5ccb-91ea-7fc4925676fa
+		summarizeBy: none
+		sourceColumn: is_current
+
+	hierarchy Merchant
+		lineageTag: d1608a66-a7a3-50cf-86ec-9e2534324797
+
+		level Category
+			lineageTag: 28844763-0f3e-5340-9289-43fc7d228745
+			column: category
+
+		level Merchant
+			lineageTag: e66cba86-f118-5bc5-83e4-88cc2c037a47
+			column: merchant_name
+
+	partition dim_merchant = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "dim_merchant"]}[Data]
+				in
+				    Data
+

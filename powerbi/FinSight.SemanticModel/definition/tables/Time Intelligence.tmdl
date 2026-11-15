@@ -1,0 +1,44 @@
+/// Calculation group: apply month-to-date, year-to-date, prior-year and year-on-year logic to any measure,
+/// instead of writing each variant of each measure by hand.
+table 'Time Intelligence'
+	lineageTag: 6d009436-397b-5b28-9b89-1704b8c9bb47
+
+	calculationGroup
+		precedence: 10
+
+		calculationItem Current = SELECTEDMEASURE ()
+
+		calculationItem MTD = CALCULATE ( SELECTEDMEASURE (), DATESMTD ( dim_date[date] ) )
+
+		calculationItem QTD = CALCULATE ( SELECTEDMEASURE (), DATESQTD ( dim_date[date] ) )
+
+		calculationItem YTD = CALCULATE ( SELECTEDMEASURE (), DATESYTD ( dim_date[date] ) )
+
+		calculationItem PY = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( dim_date[date] ) )
+
+		calculationItem YoY =
+				VAR Previous = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( dim_date[date] ) )
+				RETURN
+				    SELECTEDMEASURE () - Previous
+
+		calculationItem 'YoY %' =
+				VAR Previous = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( dim_date[date] ) )
+				RETURN
+				    DIVIDE ( SELECTEDMEASURE () - Previous, Previous )
+
+			formatStringDefinition = "0.0%;-0.0%;0.0%"
+
+	column 'Time Calculation'
+		dataType: string
+		lineageTag: 6285e309-c8cd-5601-b58d-e6850c88cde8
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: d32dab2c-7983-52a4-ada8-33119360fb76
+		summarizeBy: none
+		sourceColumn: Ordinal
+

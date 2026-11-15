@@ -1,0 +1,30 @@
+/// Disconnected table behind the Selected KPI measure: a slicer on Metric switches what a visual shows.
+table 'Metric Selector'
+	lineageTag: dcc825a3-3e64-548b-8d5c-eedf19a45f01
+
+	column Metric
+		dataType: string
+		lineageTag: b3c7869d-a2a4-58af-b764-5384f9bf8435
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Metric]
+		sortByColumn: 'Sort Order'
+
+	column 'Sort Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9bf3dde0-cf6f-5edb-9144-f07c0ec34beb
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Sort Order]
+
+	partition 'Metric Selector' = calculated
+		mode: import
+		source =
+				DATATABLE (
+				    "Metric", STRING,
+				    "Sort Order", INTEGER,
+				    { { "Transaction Value", 1 }, { "Net Revenue", 2 }, { "Transactions", 3 } }
+				)
+

@@ -1,0 +1,122 @@
+/// One row per merchant payout. expected_payout is calculated by the warehouse from its own payments, fees, refunds and chargebacks; net_payout is what the source says was paid.
+table fact_settlement
+	lineageTag: f3de3713-e585-5167-978a-a6483bf7b974
+
+	column settlement_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e0c153d6-3b97-5a3c-ac02-9557dd6d4404
+		summarizeBy: none
+		sourceColumn: settlement_key
+
+	column settlement_batch_id
+		dataType: string
+		lineageTag: 563bcc95-a10a-5126-a0ec-3ba4fa604ace
+		summarizeBy: none
+		sourceColumn: settlement_batch_id
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: cff835b4-cc50-54de-8dfd-09a85a3df3b0
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column merchant_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7ee72db8-ea19-5a6e-90b8-f0abef3a3f2b
+		summarizeBy: none
+		sourceColumn: merchant_key
+
+	column geography_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: abdb771c-dd49-57f8-9302-8e10a696310b
+		summarizeBy: none
+		sourceColumn: geography_key
+
+	column currency_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 95055951-7ea5-5fa5-bb91-9a0a3daf3500
+		summarizeBy: none
+		sourceColumn: currency_key
+
+	column gross_amount
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 1f008901-6120-5b35-83a1-082110c44414
+		summarizeBy: none
+		sourceColumn: gross_amount
+
+	column fees
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: a55ef3fa-ddd8-5dee-bb22-0c1bcddef087
+		summarizeBy: none
+		sourceColumn: fees
+
+	column refunds
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 1a0509d0-fa2c-522e-ae9b-894aa6632206
+		summarizeBy: none
+		sourceColumn: refunds
+
+	column chargebacks
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 88405cb9-8111-59fb-8923-8dd3bf01e678
+		summarizeBy: none
+		sourceColumn: chargebacks
+
+	column net_payout
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: dd627fce-6a52-5eea-acb1-d8979455b2dc
+		summarizeBy: none
+		sourceColumn: net_payout
+
+	column expected_payout
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: da96ee5e-506d-51d0-b512-0e36d8383db0
+		summarizeBy: none
+		sourceColumn: expected_payout
+
+	column variance
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 5da4c18c-ddb7-5bf3-9787-236f10a2ffeb
+		summarizeBy: none
+		sourceColumn: variance
+
+	/// True when the payout equals the expected payout to the cent
+	column is_reconciled
+		dataType: boolean
+		lineageTag: c2e67e66-df63-5a94-bc73-7bfc2fc6b55c
+		summarizeBy: none
+		sourceColumn: is_reconciled
+
+	partition fact_settlement = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "fact_settlement"]}[Data]
+				in
+				    Data
+

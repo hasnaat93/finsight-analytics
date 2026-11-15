@@ -1,0 +1,77 @@
+/// One row per captured payment: the fee charged to the merchant and what it cost to process.
+table fact_fee
+	lineageTag: 6a62ac68-30c6-51f4-a153-9478bddde0dc
+
+	column fee_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 1d828a2f-576d-5e0e-a399-bde3dbb966c6
+		summarizeBy: none
+		sourceColumn: fee_key
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4d134b37-91fb-56eb-86c8-1cf69914c719
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column merchant_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: bb34a51c-d039-58fa-ae8a-e6b518799d90
+		summarizeBy: none
+		sourceColumn: merchant_key
+
+	column geography_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: da1ca57e-88aa-53ea-afb0-d28514585ff6
+		summarizeBy: none
+		sourceColumn: geography_key
+
+	column currency_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d8ca6c6e-8aa9-5701-8b46-02df795c5237
+		summarizeBy: none
+		sourceColumn: currency_key
+
+	column fee_amount
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 75b870a6-0da0-5564-8ae2-70bd320b60ab
+		summarizeBy: none
+		sourceColumn: fee_amount
+
+	column interchange_cost
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: a14110b7-6b0b-50ce-b7c3-cc84a3d13ae3
+		summarizeBy: none
+		sourceColumn: interchange_cost
+
+	column scheme_cost
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 2c4135bf-e493-55d8-a77c-06bd15e11f7c
+		summarizeBy: none
+		sourceColumn: scheme_cost
+
+	partition fact_fee = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "fact_fee"]}[Data]
+				in
+				    Data
+

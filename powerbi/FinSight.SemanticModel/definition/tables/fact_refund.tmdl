@@ -1,0 +1,73 @@
+/// One row per refund, in USD at the rate of the refund date.
+table fact_refund
+	lineageTag: 5a7f2d5d-c39b-527c-8e72-4136b6fb947d
+
+	column refund_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 98f8134a-5215-58d9-a1c6-b32d8c6f879f
+		summarizeBy: none
+		sourceColumn: refund_key
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e3ca6237-2341-58fe-a87d-93ba3826f8a5
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column merchant_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0d631de7-816c-528a-94f1-937a10f5d7da
+		summarizeBy: none
+		sourceColumn: merchant_key
+
+	column geography_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: cd83a572-4786-580f-9711-65aed9f42621
+		summarizeBy: none
+		sourceColumn: geography_key
+
+	column currency_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: da5d25c8-a727-56b6-bae6-d976c10d3f80
+		summarizeBy: none
+		sourceColumn: currency_key
+
+	column refund_reason
+		dataType: string
+		lineageTag: e43d9587-846c-5e2c-97fd-0a807f798577
+		summarizeBy: none
+		sourceColumn: refund_reason
+
+	column refund_amount
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: fa48d812-4010-50fe-87f2-3eb76d9dc8e5
+		summarizeBy: none
+		sourceColumn: refund_amount
+
+	column is_partial
+		dataType: boolean
+		lineageTag: f562c059-f888-527f-8941-b7b3a245f0fe
+		summarizeBy: none
+		sourceColumn: is_partial
+
+	partition fact_refund = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "fact_refund"]}[Data]
+				in
+				    Data
+

@@ -293,7 +293,7 @@ def test_a_failed_control_rolls_the_batch_back_but_keeps_the_evidence(lab, monke
 def test_every_generated_batch_loads_and_reconciles(generated):
     assert [r.status for r in generated.results] == ["SUCCESS"] * 12
     assert generated.value("select count(*) from audit.reconciliation where status = 'FAIL'") == 0
-    assert generated.value("select count(*) from dwh.fact_transaction") > 15000
+    assert generated.value("select count(*) from dwh.fact_transaction") > 8000
 
 
 def test_the_quarantine_holds_exactly_what_the_generator_broke(generated):

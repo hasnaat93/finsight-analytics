@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FinSight Analytics · Financial performance and operations</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111831'/%3E%3Cpath d='M7 23l6-8 5 4 7-11' fill='none' stroke='%233987e5' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root {
     color-scheme: dark;
@@ -153,6 +154,10 @@ function lineChart(host, labels, series, opts) {
   if (!all.length) { host.innerHTML = `<p class="small">No data for this selection.</p>`; return; }
   let lo = 0, hi = Math.max(...all, 1e-9);
   if (opts.fit) { lo = Math.min(...all) * 0.98; hi = Math.max(...all) * 1.02; }
+  else { /* round the top of the axis up to a tidy number so the gridlines read cleanly */
+    const unit = Math.pow(10, Math.floor(Math.log10(hi / 4))), steps = [1, 2, 2.5, 5, 10];
+    hi = 4 * unit * steps.find((k) => 4 * unit * k >= hi);
+  }
   const x = (i) => m.l + (i * (W - m.l - m.r)) / Math.max(1, labels.length - 1);
   const y = (v) => H - m.b - ((v - lo) * (H - m.t - m.b)) / (hi - lo || 1);
   let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label)}">`;
@@ -223,7 +228,10 @@ function delta(now, before, unit, goodWhenUp = true) {
 /* The months in scope, and the comparison months one year earlier. */
 function scope() {
   const months = DATA.monthly;
-  if (year !== "All") return { now: months.filter((m) => String(m.year) === year), before: months.filter((m) => String(m.year) === String(Number(year) - 1)) };
+  if (year !== "All") {
+    const now = months.filter((m) => String(m.year) === year), inScope = new Set(now.map((m) => m.month.slice(5)));
+    return { now, before: months.filter((m) => String(m.year) === String(Number(year) - 1) && inScope.has(m.month.slice(5))) };
+  }
   return { now: months.slice(-12), before: months.slice(-24, -12), all: months };
 }
 function measures(rows) {
@@ -255,6 +263,7 @@ function renderExecutive() {
   const period = year === "All" ? "last 12 months" : year;
   $("kpis").innerHTML =
     tile(`Transaction value, ${period}`, usdc(a.tpv), delta(a.tpv, b.tpv)) +
+    /* a part-year is compared with the same months of the previous year */
     tile("Net revenue", usdc(a.net), delta(a.net, b.net)) +
     tile("Take rate", pct(a.take, 2), delta(a.take, b.take, "pt")) +
     tile("Approval rate", pct(a.approval, 2), delta(a.approval, b.approval, "pt")) +

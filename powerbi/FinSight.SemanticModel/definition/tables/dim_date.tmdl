@@ -1,0 +1,158 @@
+/// Calendar. One row per day; marked as the date table.
+table dim_date
+	lineageTag: abdf3849-aad1-5c71-830c-ed71b1601398
+	dataCategory: Time
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 944eea9a-7ed7-5bc1-b785-b48c8cc6e07c
+		summarizeBy: none
+		sourceColumn: date_key
+
+	/// Calendar date
+	column date
+		dataType: dateTime
+		isKey
+		formatString: Short Date
+		lineageTag: 9117e540-cced-5884-a5ce-54dc99795775
+		summarizeBy: none
+		sourceColumn: date
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: b05dd95e-e591-5427-a0cb-ae801e510cd3
+		summarizeBy: none
+		sourceColumn: year
+
+	column quarter_number
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5f92765c-5d78-53e9-852d-4f65fbc47628
+		summarizeBy: none
+		sourceColumn: quarter_number
+
+	column quarter
+		dataType: string
+		lineageTag: 72c64934-1bf5-59ba-b1ba-421cbeea55ba
+		summarizeBy: none
+		sourceColumn: quarter
+		sortByColumn: quarter_number
+
+	column month_number
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a1970046-6061-54e7-b32e-7e3303235906
+		summarizeBy: none
+		sourceColumn: month_number
+
+	column month_name
+		dataType: string
+		lineageTag: 4a05deb3-daa4-57fa-b3d1-197c49ad32c1
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: month_number
+
+	/// Year and month as yyyy-mm
+	column year_month
+		dataType: string
+		lineageTag: f6d1a246-59b4-5414-ae69-b06dcbe01289
+		summarizeBy: none
+		sourceColumn: year_month
+
+	column week_of_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a49e05e-235b-5e6c-9ce6-fc82f497a7fc
+		summarizeBy: none
+		sourceColumn: week_of_year
+
+	column day_of_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 1ba6d5f3-331a-5a96-9c32-13b70c389b27
+		summarizeBy: none
+		sourceColumn: day_of_month
+
+	column day_of_week
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9f8709ca-7dc2-5200-8ed6-b30a9efa2d65
+		summarizeBy: none
+		sourceColumn: day_of_week
+
+	column day_name
+		dataType: string
+		lineageTag: 1314839a-faf4-5cab-b3f4-de42443f2e60
+		summarizeBy: none
+		sourceColumn: day_name
+		sortByColumn: day_of_week
+
+	/// Fiscal year, starting 1 July
+	column fiscal_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 81f4c51d-3948-5148-b152-b6493e2ff698
+		summarizeBy: none
+		sourceColumn: fiscal_year
+
+	column fiscal_quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 6f4d6a83-b8f3-59b0-9e03-cdb6f1d347c5
+		summarizeBy: none
+		sourceColumn: fiscal_quarter
+
+	/// Month of the fiscal year: 1 is July
+	column fiscal_period
+		dataType: int64
+		formatString: 0
+		lineageTag: 9425bea8-c52e-5862-adb2-46f847632e93
+		summarizeBy: none
+		sourceColumn: fiscal_period
+
+	column is_weekend
+		dataType: boolean
+		lineageTag: 40888093-ccb8-580b-8f22-be49ae508491
+		summarizeBy: none
+		sourceColumn: is_weekend
+
+	column is_holiday
+		dataType: boolean
+		lineageTag: bf247c8b-2f3f-5f72-bac9-8d5e0b642efc
+		summarizeBy: none
+		sourceColumn: is_holiday
+
+	hierarchy Calendar
+		lineageTag: 3e8d44e3-4d18-558f-9a19-3fca040d5b34
+
+		level Year
+			lineageTag: aba1253b-45d7-5bfa-91b5-08828822c125
+			column: year
+
+		level Quarter
+			lineageTag: fb101d93-c45d-552f-be2c-e81f636228a6
+			column: quarter
+
+		level Month
+			lineageTag: b66225dd-7d32-50cd-bad7-4e9e80bf8fa3
+			column: month_name
+
+		level Day
+			lineageTag: a62447b7-6b31-5cae-833b-a2a2f0927834
+			column: date
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "dim_date"]}[Data]
+				in
+				    Data
+

@@ -1,0 +1,33 @@
+/// Currency the payment was made and settled in.
+table dim_currency
+	lineageTag: f7724b51-a9ff-5256-9e1f-ba87e533743d
+
+	column currency_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c96633ae-d51d-5f78-ab5a-f2747da8998f
+		summarizeBy: none
+		sourceColumn: currency_key
+
+	column currency_code
+		dataType: string
+		lineageTag: 8a7a808f-d843-577f-a171-1a8017987ccd
+		summarizeBy: none
+		sourceColumn: currency_code
+
+	column currency_name
+		dataType: string
+		lineageTag: 31070f6f-c611-5fc2-a611-8bda143e20e1
+		summarizeBy: none
+		sourceColumn: currency_name
+
+	partition dim_currency = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "dim_currency"]}[Data]
+				in
+				    Data
+

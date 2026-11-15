@@ -1,0 +1,26 @@
+/// Which user may see which region. Used only by the Regional Manager security role.
+table region_access
+	isHidden
+	lineageTag: bb1c9b41-7654-5269-b90b-2188e03272bf
+
+	column user_email
+		dataType: string
+		lineageTag: dd10dabd-e296-5e50-9d52-9624493dc28c
+		summarizeBy: none
+		sourceColumn: user_email
+
+	column region
+		dataType: string
+		lineageTag: 78c66ad1-0eda-59e1-b7f0-bfa1c4a805f7
+		summarizeBy: none
+		sourceColumn: region
+
+	partition region_access = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "region_access"]}[Data]
+				in
+				    Data
+

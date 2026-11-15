@@ -1,0 +1,73 @@
+/// One row per loaded monthly batch, with its row counts and reconciliation controls.
+table etl_batches
+	lineageTag: a582b32d-a998-51dd-8858-875d7236b5fd
+
+	column batch_id
+		dataType: string
+		lineageTag: 64ab9691-9419-5a2e-ae03-6c36ae19ca05
+		summarizeBy: none
+		sourceColumn: batch_id
+
+	column batch_month
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: fec4f002-3dee-5ae6-9c4f-acd27910e303
+		summarizeBy: none
+		sourceColumn: batch_month
+
+	column loaded_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 633a520f-36d6-52eb-84fc-787aa624c919
+		summarizeBy: none
+		sourceColumn: loaded_at
+
+	column duration_ms
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5f81377e-c3ad-53bb-ac44-f0a468bb907a
+		summarizeBy: none
+		sourceColumn: duration_ms
+
+	column rows_delivered
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4710e972-5725-5287-af3d-665bd9457cd6
+		summarizeBy: none
+		sourceColumn: rows_delivered
+
+	column rows_rejected
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 26af7738-bdfa-5894-bc79-78b70f80ebaa
+		summarizeBy: none
+		sourceColumn: rows_rejected
+
+	column controls_run
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3c809d37-8518-5e69-877f-063bc06db21a
+		summarizeBy: none
+		sourceColumn: controls_run
+
+	column controls_passed
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 123bf72d-2e1a-596d-85fb-7b403d8463b9
+		summarizeBy: none
+		sourceColumn: controls_passed
+
+	partition etl_batches = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "etl_batches"]}[Data]
+				in
+				    Data
+

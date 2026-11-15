@@ -330,7 +330,9 @@ class Generator:
         weekly = np.where(weekend[None, :], np.array([c[6] for c in CATEGORIES])[:, None], 1.0)
         shape = (season * weekly)[self.m_cat]                                             # merchant x day
 
-        target_per_day = 1_500_000 * cfg.scale / self.total_days
+        # 0.52 offsets the merchants that join or grow after the first day, so that a scale of 1.0
+        # lands near 1.5 million payments over the default 36 months.
+        target_per_day = 0.52 * 1_500_000 * cfg.scale / self.total_days
         base = target_per_day / max(self.m_size[self.m_join <= 0].sum(), 1e-9)
         counts = rng.poisson(level[:, None] * shape * base)
         total = int(counts.sum())

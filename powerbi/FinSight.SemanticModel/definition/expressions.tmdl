@@ -1,0 +1,8 @@
+/// PostgreSQL host. Change this to point the model at another environment.
+expression Server = "localhost" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 55fbe35b-e24c-5f3b-974b-f1a8c2f13edc
+
+/// PostgreSQL database that holds the mart schema.
+expression Database = "finsight" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: bc4bd33b-cf4c-5d4f-9ff6-91f56a67346d
+

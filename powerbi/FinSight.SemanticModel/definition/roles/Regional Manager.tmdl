@@ -1,0 +1,13 @@
+/// A regional manager sees only the regions listed against their sign-in address in region_access.
+role 'Regional Manager'
+	modelPermission: read
+
+	tablePermission dim_geography =
+			dim_geography[region]
+			    IN CALCULATETABLE (
+			        VALUES ( region_access[region] ),
+			        region_access[user_email] = USERPRINCIPALNAME ()
+			    )
+
+	tablePermission region_access = region_access[user_email] = USERPRINCIPALNAME ()
+

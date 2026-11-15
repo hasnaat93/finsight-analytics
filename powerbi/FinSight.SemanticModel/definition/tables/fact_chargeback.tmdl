@@ -1,0 +1,74 @@
+/// One row per dispute, in USD at the rate of the dispute date.
+table fact_chargeback
+	lineageTag: 26a4ee20-6f99-5cf9-8998-781c8aa1dbfd
+
+	column chargeback_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6b9fc689-3fe8-5de1-aae6-88644b98d532
+		summarizeBy: none
+		sourceColumn: chargeback_key
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 89d4d30f-29e3-5a39-870d-9dce1100e268
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column merchant_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3b75d879-854a-5d1d-8b56-6d7c7410bda8
+		summarizeBy: none
+		sourceColumn: merchant_key
+
+	column geography_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 15778fa4-5660-5376-a0b0-075b63ff835c
+		summarizeBy: none
+		sourceColumn: geography_key
+
+	column currency_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 47ceb204-13dc-530c-a95f-eeccb09e7ad4
+		summarizeBy: none
+		sourceColumn: currency_key
+
+	column reason_code
+		dataType: string
+		lineageTag: 404c6424-bbeb-5b77-9efc-4e5731324949
+		summarizeBy: none
+		sourceColumn: reason_code
+
+	/// WON, LOST or PENDING
+	column outcome
+		dataType: string
+		lineageTag: 12fe9d49-c284-548a-bfb2-ba920c79e642
+		summarizeBy: none
+		sourceColumn: outcome
+
+	column chargeback_amount
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 11ea6d2b-7f45-5e73-b643-8f493f960c74
+		summarizeBy: none
+		sourceColumn: chargeback_amount
+
+	partition fact_chargeback = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Server, Database),
+				    Data = Source{[Schema = "mart", Item = "fact_chargeback"]}[Data]
+				in
+				    Data
+

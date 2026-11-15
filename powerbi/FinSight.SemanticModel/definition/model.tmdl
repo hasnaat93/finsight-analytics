@@ -1,0 +1,28 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+
+ref table dim_date
+ref table dim_geography
+ref table dim_merchant
+ref table dim_customer
+ref table dim_payment_method
+ref table dim_channel
+ref table dim_currency
+ref table dim_transaction_status
+ref table fact_transaction
+ref table fact_refund
+ref table fact_chargeback
+ref table fact_fee
+ref table fact_settlement
+ref table etl_rejections
+ref table etl_batches
+ref table region_access
+ref table _Measures
+ref table 'Time Intelligence'
+ref table 'Metric Selector'
+
+ref role 'Regional Manager'
+
