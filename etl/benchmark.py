@@ -32,11 +32,18 @@ def measure(conn: psycopg.Connection, sql: str) -> tuple[float, str]:
 
 
 def _scan_node(plan: dict) -> str:
-    """The scan at the bottom of the plan: this is what an index changes."""
-    while plan.get("Plans"):
-        plan = plan["Plans"][0]
-    name = plan["Node Type"]
-    return f"{name} using {plan['Index Name']}" if "Index Name" in plan else name
+    """How the plan reads its largest table: the scan that produced the most rows."""
+    scans: list[tuple[float, str]] = []
+
+    def walk(node: dict) -> None:
+        if "Scan" in node["Node Type"]:
+            target = node.get("Index Name") or node.get("Relation Name", "")
+            scans.append((node.get("Actual Rows", 0) * node.get("Actual Loops", 1), f"{node['Node Type']} on {target}"))
+        for child in node.get("Plans", []):
+            walk(child)
+
+    walk(plan)
+    return max(scans)[1] if scans else plan["Node Type"]
 
 
 def without_index(conn: psycopg.Connection, index: str, sql: str) -> tuple[float, str]:
@@ -48,17 +55,16 @@ def without_index(conn: psycopg.Connection, index: str, sql: str) -> tuple[float
 def main() -> int:
     with connect(load_settings().database_url) as conn:
         conn.execute("analyze")
-        merchant_key, month_start, month_end = conn.execute("""
-            select merchant_key, min(date_key), max(date_key) from dwh.fact_transaction
-            where batch_id = (select max(batch_id) from dwh.fact_transaction)
-              and merchant_key <> -1
-            group by merchant_key order by count(*) desc limit 1""").fetchone()
+        # a mid-sized merchant: the kind of row-level lookup a drill-through page makes
+        merchant_key = conn.execute("""
+            select merchant_key from dwh.fact_transaction where merchant_key <> -1
+            group by merchant_key order by abs(count(*) - 2000) limit 1""").fetchone()[0]
         rows = conn.execute("select count(*) from dwh.fact_transaction").fetchone()[0]
         settlements = conn.execute("select count(*) from dwh.fact_settlement").fetchone()[0]
 
         one_merchant = f"""
-            select count(*), sum(amount_reporting) from dwh.fact_transaction
-            where merchant_key = {merchant_key} and date_key between {month_start} and {month_end}"""
+            select date_key, count(*), sum(amount_reporting) from dwh.fact_transaction
+            where merchant_key = {merchant_key} group by date_key"""
         unreconciled = """
             select settlement_batch_id, variance from dwh.fact_settlement
             where not is_reconciled and date_key >= (select max(date_key) - 100 from dwh.fact_settlement)"""
@@ -75,7 +81,7 @@ def main() -> int:
             from dwh.fact_transaction f join dwh.dim_date d using (date_key) group by d.year_month"""
 
         cases = [
-            ("One merchant, one month of payments", "index fact_transaction_merchant (merchant_key, date_key)",
+            ("Daily history of one merchant", "index fact_transaction_merchant (merchant_key, date_key)",
              without_index(conn, "fact_transaction_merchant", one_merchant), measure(conn, one_merchant)),
             ("Recent unreconciled settlement batches", "partial index fact_settlement_unreconciled",
              without_index(conn, "fact_settlement_unreconciled", unreconciled), measure(conn, unreconciled)),
