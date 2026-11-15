@@ -1,0 +1,14 @@
+# FinSight Analytics configuration.
+# Environment variables override this file: FINSIGHT_DATABASE_URL, FINSIGHT_RAW_DIR.
+# Keep credentials out of this file; put them in .env (see .env.example).
+
+database:
+  # Matches docker-compose.yml. Override with FINSIGHT_DATABASE_URL.
+  url: postgresql://finsight:finsight@localhost:5432/finsight
+
+paths:
+  raw: data/raw
+  validation_rules: config/validation_rules.yaml
+
+reporting:
+  currency: USD

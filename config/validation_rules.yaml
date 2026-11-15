@@ -1,0 +1,195 @@
+# Validation rules, applied in order to the rows of each staged file.
+#
+# `when` is a SQL predicate over the staging columns of the row (all text). A row that
+# matches a rule is quarantined in audit.rejected_rows under that rule's name and takes
+# no further part in the load. Later rules only see rows that passed the earlier ones.
+#
+# `duplicates` runs last, over the surviving rows: of the rows sharing `key`, the one
+# that sorts first by `keep` is kept and the others are rejected.
+#
+# Helper functions (defined in sql/ddl/02_staging.sql) return NULL instead of raising:
+#   staging.to_amount(text)  staging.to_number(text)  staging.to_ts(text)  staging.to_date(text)
+#
+# A rule that looks something up in another table refers to its own row as
+# staging.<entity>_work.<column>, so the column cannot be confused with the other table's.
+#
+# :batch_end is the last day covered by the batch being loaded.
+#
+# Not every problem is a rejection. A payment with no merchant id or an unknown customer
+# is still a real payment, so it is loaded against the Unknown member (key -1) of that
+# dimension. A settlement whose payout does not add up is loaded and reported as
+# unreconciled: hiding it would defeat the purpose of the reconciliation page.
+
+merchants:
+  rules:
+    - name: missing_merchant_id
+      reason: Merchant id is blank
+      when: nullif(trim(merchant_id), '') is null
+    - name: missing_merchant_name
+      reason: Merchant name is blank
+      when: nullif(trim(merchant_name), '') is null
+    - name: unknown_country
+      reason: Country is not in dim_geography
+      when: upper(trim(country)) not in (select country_code from dwh.dim_geography) or country is null
+    - name: invalid_onboarding_date
+      reason: Onboarding date is not a valid date
+      when: onboarding_date is not null and staging.to_date(onboarding_date) is null
+  duplicates:
+    name: duplicate_merchant
+    reason: The merchant appears more than once in the file
+    key: trim(merchant_id)
+    keep: row_number desc
+
+customers:
+  rules:
+    - name: missing_customer_id
+      reason: Customer id is blank
+      when: nullif(trim(customer_id), '') is null
+  duplicates:
+    name: duplicate_customer
+    reason: The customer appears more than once in the file
+    key: trim(customer_id)
+    keep: row_number desc
+
+fx_rates:
+  rules:
+    - name: invalid_rate_date
+      reason: Rate date is not a valid date
+      when: staging.to_date(rate_date) is null
+    - name: unknown_currency
+      reason: Currency is not in dim_currency
+      when: upper(trim(currency)) not in (select currency_code from dwh.dim_currency) or currency is null
+    - name: invalid_rate
+      reason: Rate is missing, not a number, or not positive
+      when: staging.to_number(rate_to_usd) is null or staging.to_number(rate_to_usd) <= 0
+  duplicates:
+    name: duplicate_rate
+    reason: More than one rate for the same currency and day
+    key: trim(rate_date) || '|' || upper(trim(currency))
+    keep: row_number desc
+
+transactions:
+  rules:
+    - name: missing_transaction_id
+      reason: Transaction id is blank
+      when: nullif(trim(transaction_id), '') is null
+    - name: invalid_timestamp
+      reason: Timestamp is missing or not a valid date and time
+      when: staging.to_ts(transaction_ts) is null
+    - name: future_timestamp
+      reason: Timestamp is later than the period the file covers
+      when: staging.to_ts(transaction_ts) >= :batch_end + 1
+    - name: non_positive_amount
+      reason: Amount is missing, not a number, or not greater than zero
+      when: staging.to_amount(amount) is null or staging.to_amount(amount) <= 0
+    - name: unknown_currency
+      reason: Currency is not in dim_currency
+      when: upper(trim(currency)) not in (select currency_code from dwh.dim_currency) or currency is null
+    - name: invalid_status
+      reason: Status is not CAPTURED, DECLINED or VOIDED
+      when: upper(trim(status)) not in ('CAPTURED', 'DECLINED', 'VOIDED') or status is null
+    - name: missing_fx_rate
+      reason: No exchange rate is available on or before the transaction date
+      when: >
+        not exists (select 1 from dwh.fx_rate r join dwh.dim_currency c using (currency_key)
+                    where c.currency_code = upper(trim(currency)) and r.rate_date <= staging.to_ts(transaction_ts)::date)
+  duplicates:
+    name: duplicate_transaction_id
+    reason: The transaction id appears more than once; the latest version is kept
+    key: trim(transaction_id)
+    keep: staging.to_ts(transaction_ts) desc, row_number desc
+
+refunds:
+  rules:
+    - name: missing_refund_id
+      reason: Refund id is blank
+      when: nullif(trim(refund_id), '') is null
+    - name: invalid_timestamp
+      reason: Timestamp is missing or not a valid date and time
+      when: staging.to_ts(refund_ts) is null
+    - name: non_positive_amount
+      reason: Amount is missing, not a number, or not greater than zero
+      when: staging.to_amount(amount) is null or staging.to_amount(amount) <= 0
+    - name: orphan_refund
+      reason: The refunded payment is not a captured payment in the warehouse
+      when: >
+        not exists (select 1 from dwh.fact_transaction f
+                    where f.transaction_id = trim(staging.refunds_work.transaction_id) and f.is_captured)
+    - name: refund_exceeds_original
+      reason: The refund is larger than the payment it refunds
+      when: >
+        staging.to_amount(amount) > (select f.amount_original from dwh.fact_transaction f
+                                     where f.transaction_id = trim(staging.refunds_work.transaction_id))
+  duplicates:
+    name: duplicate_refund_id
+    reason: The refund id appears more than once
+    key: trim(refund_id)
+    keep: row_number desc
+
+chargebacks:
+  rules:
+    - name: missing_chargeback_id
+      reason: Chargeback id is blank
+      when: nullif(trim(chargeback_id), '') is null
+    - name: invalid_date
+      reason: Chargeback date is missing or not a valid date
+      when: staging.to_date(chargeback_date) is null
+    - name: non_positive_amount
+      reason: Amount is missing, not a number, or not greater than zero
+      when: staging.to_amount(amount) is null or staging.to_amount(amount) <= 0
+    - name: invalid_outcome
+      reason: Outcome is not WON, LOST or PENDING
+      when: upper(trim(outcome)) not in ('WON', 'LOST', 'PENDING') or outcome is null
+    - name: orphan_chargeback
+      reason: The disputed payment is not a captured payment in the warehouse
+      when: >
+        not exists (select 1 from dwh.fact_transaction f
+                    where f.transaction_id = trim(staging.chargebacks_work.transaction_id) and f.is_captured)
+  duplicates:
+    name: duplicate_chargeback_id
+    reason: The chargeback id appears more than once
+    key: trim(chargeback_id)
+    keep: row_number desc
+
+fees:
+  rules:
+    - name: invalid_fee_amount
+      reason: A fee amount is missing, not a number, or negative
+      when: >
+        staging.to_amount(merchant_fee) is null or staging.to_amount(interchange_cost) is null
+        or staging.to_amount(scheme_cost) is null or staging.to_amount(merchant_fee) < 0
+        or staging.to_amount(interchange_cost) < 0 or staging.to_amount(scheme_cost) < 0
+    - name: fee_without_capture
+      reason: The fee is for a payment that is not a captured payment in the warehouse
+      when: >
+        not exists (select 1 from dwh.fact_transaction f
+                    where f.transaction_id = trim(staging.fees_work.transaction_id) and f.is_captured)
+  duplicates:
+    name: duplicate_fee
+    reason: More than one fee row for the same payment
+    key: trim(transaction_id)
+    keep: row_number desc
+
+settlements:
+  rules:
+    - name: missing_settlement_batch_id
+      reason: Settlement batch id is blank
+      when: nullif(trim(settlement_batch_id), '') is null
+    - name: invalid_date
+      reason: Settlement date is missing or not a valid date
+      when: staging.to_date(settlement_date) is null
+    - name: unknown_merchant
+      reason: The merchant is not in dim_merchant
+      when: >
+        not exists (select 1 from dwh.dim_merchant m where m.merchant_id = trim(staging.settlements_work.merchant_id))
+    - name: invalid_amount
+      reason: An amount is missing or not a number
+      when: >
+        staging.to_amount(gross_amount) is null or staging.to_amount(fee_amount) is null
+        or staging.to_amount(refund_amount) is null or staging.to_amount(chargeback_amount) is null
+        or staging.to_amount(net_payout) is null
+  duplicates:
+    name: duplicate_settlement_batch_id
+    reason: The settlement batch id appears more than once
+    key: trim(settlement_batch_id)
+    keep: row_number desc

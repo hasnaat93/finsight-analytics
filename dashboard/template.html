@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FinSight Analytics · Financial performance and operations</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b1024; --surface: #111831; --raised: #172040; --line: #232c4d;
+    --text: #e8ecf8; --muted: #9aa5c4; --faint: #6b7697;
+    --s1: #3987e5; --s2: #d95926; --good: #3fb37f; --warn: #e0a83a; --bad: #e5604d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; padding: 26px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h3 { font-size: 13px; font-weight: 600; margin: 0 0 2px; }
+  p { margin: 0; }
+  .sub { color: var(--muted); } .small { font-size: 12px; color: var(--muted); }
+  .notice { margin-top: 14px; padding: 10px 14px; border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: 6px; background: var(--surface); color: var(--muted); font-size: 13px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-top: 20px; }
+  .tabs { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .tabs button { background: transparent; color: var(--muted); border: 0; border-right: 1px solid var(--line); padding: 8px 14px; font: inherit; cursor: pointer; }
+  .tabs button:last-child { border-right: 0; }
+  .tabs button[aria-selected="true"] { background: var(--raised); color: var(--text); font-weight: 600; }
+  select { font: inherit; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; }
+  :focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+  .grid { display: grid; gap: 14px; margin-top: 14px; }
+  .tiles { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .two { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  .three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+  .tile .label { color: var(--muted); font-size: 12px; }
+  .tile .value { font-size: 22px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tile .delta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .up { color: var(--good); } .down { color: var(--bad); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 6px 0 4px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+  .chart { position: relative; margin-top: 6px; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: #050816; border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font-size: 12px; white-space: nowrap; transform: translate(-50%, -100%); display: none; z-index: 2; }
+  .tip span { color: var(--muted); }
+  .rows { display: grid; gap: 9px; margin-top: 10px; }
+  .row { display: grid; grid-template-columns: minmax(96px, 32%) 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+  .track { height: 10px; background: var(--raised); border-radius: 0 4px 4px 0; }
+  .fill { height: 10px; background: var(--s1); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .row .num { font-variant-numeric: tabular-nums; text-align: right; min-width: 84px; }
+  .row .num span { color: var(--muted); margin-left: 6px; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  .r { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid currentColor; white-space: nowrap; }
+  .heat { display: grid; grid-template-columns: 34px repeat(24, minmax(14px, 1fr)); gap: 2px; margin-top: 10px; font-size: 10px; color: var(--muted); min-width: 520px; }
+  .heat div { height: 22px; border-radius: 3px; }
+  .heat .lab { height: auto; display: flex; align-items: center; }
+  .heat .hr { height: auto; text-align: center; }
+  section[hidden] { display: none; }
+  code { font: 12px ui-monospace, Consolas, monospace; color: var(--muted); }
+  footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
+  a { color: var(--s1); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>FinSight Analytics</h1>
+    <p class="sub">Financial performance and operations intelligence for a payment processor.</p>
+    <p class="notice"><b>Synthetic data.</b> Every merchant, payment and amount here comes from a seeded simulator. This page is a web preview of the Power BI report, built from the same PostgreSQL warehouse. Amounts are in USD.</p>
+  </header>
+
+  <div class="bar">
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="executive" aria-selected="true">Executive overview</button>
+      <button role="tab" data-tab="merchant" aria-selected="false">Merchant analytics</button>
+      <button role="tab" data-tab="transaction" aria-selected="false">Transaction analytics</button>
+      <button role="tab" data-tab="settlement" aria-selected="false">Settlement &amp; reconciliation</button>
+    </div>
+    <label class="small">Year <select id="year"></select></label>
+  </div>
+  <p class="small" id="range" style="margin-top:10px"></p>
+
+  <section id="executive">
+    <div class="grid tiles" id="kpis"></div>
+    <div class="grid"><div class="card"><h3 id="tpvtitle">Transaction value by month</h3><p class="small">Captured payments, converted to USD at the daily rate.</p>
+      <div class="legend" id="tpvlegend"></div><div class="chart" id="tpvchart"></div></div></div>
+    <div class="grid two">
+      <div class="card"><h3>From fee revenue to net revenue</h3><p class="small">What the processor keeps after paying card issuers and networks and absorbing lost disputes.</p><div class="chart" id="waterfall"></div></div>
+      <div class="card"><h3>Transaction value by country</h3><div class="rows" id="countries"></div></div>
+    </div>
+  </section>
+
+  <section id="merchant" hidden>
+    <div class="grid tiles" id="mkpis"></div>
+    <div class="grid"><div class="card"><h3>Top 10 merchants by transaction value</h3><div class="scroll"><table id="top10" style="min-width:820px"></table></div></div></div>
+    <div class="grid two">
+      <div class="card"><h3>Merchant concentration</h3><p class="small" id="paretonote"></p><div class="chart" id="pareto"></div></div>
+      <div class="card"><h3>Transaction value by category</h3><div class="rows" id="categories"></div></div>
+    </div>
+    <div class="grid"><div class="card"><h3>Merchants at risk</h3><p class="small">Transaction value down more than 25% against the previous year. Needs a year to be selected.</p><div class="scroll"><table id="atrisk" style="min-width:640px"></table></div></div></div>
+  </section>
+
+  <section id="transaction" hidden>
+    <div class="grid tiles" id="tkpis"></div>
+    <div class="grid three">
+      <div class="card"><h3>Approval rate by payment method</h3><div class="rows" id="methods"></div></div>
+      <div class="card"><h3>Approval rate by channel</h3><div class="rows" id="channels"></div></div>
+      <div class="card"><h3>Approval rate by card brand</h3><div class="rows" id="brands"></div></div>
+    </div>
+    <div class="grid two">
+      <div class="card"><h3>Why payments are declined</h3><div class="rows" id="declines"></div></div>
+      <div class="card"><h3>Disputes by reason</h3><p class="small">Count, with the share the merchant lost.</p><div class="rows" id="cbreasons"></div></div>
+    </div>
+    <div class="grid"><div class="card"><h3>When payments happen</h3><p class="small">Payment attempts by weekday and hour (UTC). Brighter means busier.</p><div class="scroll"><div class="heat" id="heat"></div></div></div></div>
+    <div class="grid"><div class="card"><h3>Refund and chargeback rates by month</h3><p class="small">Refunds as a share of transaction value; chargebacks per 1,000 approved payments.</p>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Refund rate %</span><span><i style="background:var(--s2)"></i>Chargebacks per 1,000</span></div><div class="chart" id="riskchart"></div></div></div>
+  </section>
+
+  <section id="settlement" hidden>
+    <div class="grid tiles" id="skpis"></div>
+    <div class="grid"><div class="card"><h3>Expected and actual payout by month</h3><p class="small">Expected is calculated by the warehouse from its own payments, fees, refunds and chargebacks.</p>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Expected payout</span><span><i style="background:var(--s2)"></i>Actual payout</span></div><div class="chart" id="payout"></div></div></div>
+    <div class="grid"><div class="card"><h3>Unreconciled settlement batches</h3><p class="small" id="unrecnote"></p><div class="scroll"><table id="unrec" style="min-width:760px"></table></div></div></div>
+    <div class="grid two">
+      <div class="card"><h3>Data quality: rows quarantined by rule</h3><p class="small" id="dqnote"></p><div class="scroll"><table id="rejects" style="min-width:420px"></table></div></div>
+      <div class="card"><h3>Data quality: pipeline controls</h3><div class="grid tiles" id="dqtiles" style="margin-top:8px"></div><p class="small" id="loadnote" style="margin-top:10px"></p></div>
+    </div>
+  </section>
+
+  <footer id="footer"></footer>
+</main>
+
+<script>
+const DATA = /*__FINSIGHT_DATA__*/null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const int = (n) => Math.round(Number(n)).toLocaleString("en-US");
+const pct = (n, d = 1) => (n == null || !isFinite(n) ? "–" : Number(n).toFixed(d) + "%");
+const usd = (n, d = 0) => n == null ? "–" : "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const compact = (n) => new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+const usdc = (n) => "$" + compact(n);
+const sum = (rows, key) => rows.reduce((t, r) => t + (Number(r[key]) || 0), 0);
+const monthLabel = (ym) => new Date(ym + "-01T00:00:00Z").toLocaleDateString("en-GB", { month: "short", year: "2-digit", timeZone: "UTC" });
+const longDate = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+let year = "All";
+
+function lineChart(host, labels, series, opts) {
+  const W = Math.max(280, host.clientWidth || 1000), H = opts.height || 250, m = { l: 56, r: 12, t: 10, b: 26 };
+  const all = series.flatMap((s) => s.values).filter((v) => v != null);
+  if (!all.length) { host.innerHTML = `<p class="small">No data for this selection.</p>`; return; }
+  let lo = 0, hi = Math.max(...all, 1e-9);
+  if (opts.fit) { lo = Math.min(...all) * 0.98; hi = Math.max(...all) * 1.02; }
+  const x = (i) => m.l + (i * (W - m.l - m.r)) / Math.max(1, labels.length - 1);
+  const y = (v) => H - m.b - ((v - lo) * (H - m.t - m.b)) / (hi - lo || 1);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label)}">`;
+  for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+    const v = lo + t * (hi - lo);
+    svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#232c4d"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="#9aa5c4">${esc(opts.tick(v))}</text>`;
+  }
+  const step = Math.ceil(labels.length / Math.max(3, Math.floor(W / 90)));
+  labels.forEach((l, i) => { if (i % step === 0) svg += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#9aa5c4">${esc(l)}</text>`; });
+  for (const s of series) {
+    const path = s.values.map((v, i) => (v == null ? "" : `${i && s.values[i - 1] != null ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`)).join("");
+    svg += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
+  }
+  svg += `<line class="cross" y1="${m.t}" y2="${H - m.b}" stroke="#9aa5c4" stroke-dasharray="3 3" visibility="hidden"/>`;
+  svg += series.map((s) => `<circle class="dot" r="4" fill="${s.color}" stroke="#111831" stroke-width="2" visibility="hidden"/>`).join("");
+  svg += `<rect class="hit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/></svg><div class="tip"></div>`;
+  host.innerHTML = svg;
+  const el = host.querySelector("svg"), tip = host.querySelector(".tip"), cross = host.querySelector(".cross"), dots = host.querySelectorAll(".dot");
+  const move = (ev) => {
+    const box = el.getBoundingClientRect();
+    const i = Math.max(0, Math.min(labels.length - 1, Math.round((((ev.clientX - box.left) / box.width) * W - m.l) / (W - m.l - m.r) * (labels.length - 1))));
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+    let top = H;
+    series.forEach((s, k) => {
+      const v = s.values[i];
+      dots[k].setAttribute("visibility", v == null ? "hidden" : "visible");
+      if (v != null) { dots[k].setAttribute("cx", x(i)); dots[k].setAttribute("cy", y(v)); top = Math.min(top, y(v)); }
+    });
+    tip.innerHTML = `<span>${esc(labels[i])}</span>` + series.map((s) => `<br><span>${esc(s.name)}</span> <b>${s.values[i] == null ? "–" : esc((s.value || opts.value)(s.values[i]))}</b>`).join("");
+    tip.style.display = "block";
+    tip.style.left = Math.max(80, Math.min(box.width - 80, (x(i) / W) * box.width)) + "px";
+    tip.style.top = Math.max(44, (top / H) * box.height - 10) + "px";
+  };
+  el.querySelector(".hit").addEventListener("pointermove", move);
+  el.querySelector(".hit").addEventListener("pointerdown", move);
+  el.addEventListener("pointerleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); dots.forEach((d) => d.setAttribute("visibility", "hidden")); });
+}
+
+function waterfall(host, steps) {
+  const W = Math.max(280, host.clientWidth || 520), H = 250, m = { l: 12, r: 12, t: 22, b: 40 };
+  const top = Math.max(...steps.map((s) => Math.max(s.from, s.to)), 1), bw = (W - m.l - m.r) / steps.length;
+  const y = (v) => H - m.b - (v / top) * (H - m.t - m.b);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fee revenue to net revenue waterfall">`;
+  steps.forEach((s, i) => {
+    const x = m.l + i * bw + bw * 0.16, w = bw * 0.68, y1 = y(Math.max(s.from, s.to)), h = Math.max(2, Math.abs(y(s.from) - y(s.to)));
+    svg += `<rect x="${x}" y="${y1}" width="${w}" height="${h}" rx="4" fill="${s.color}"><title>${esc(s.name)}: ${esc(usd(s.amount))}</title></rect>`;
+    svg += `<text x="${x + w / 2}" y="${y1 - 6}" text-anchor="middle" font-size="11" fill="#e8ecf8">${esc((s.sign || "") + usdc(Math.abs(s.amount)))}</text>`;
+    svg += `<text x="${x + w / 2}" y="${H - 22}" text-anchor="middle" font-size="11" fill="#9aa5c4">${esc(s.name)}</text><text x="${x + w / 2}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#6b7697">${esc(s.note || "")}</text>`;
+    if (i < steps.length - 1) svg += `<line x1="${x + w}" x2="${m.l + (i + 1) * bw + bw * 0.16}" y1="${y(s.to)}" y2="${y(s.to)}" stroke="#6b7697" stroke-dasharray="2 3"/>`;
+  });
+  host.innerHTML = svg + "</svg>";
+}
+
+function barRows(host, items) {
+  const top = Math.max(...items.map((i) => i.value), 1e-9);
+  host.innerHTML = items.map((i) => `<div class="row" title="${esc(i.name)}: ${esc(i.text)}${i.note ? " · " + esc(i.note) : ""}"><div>${esc(i.name)}</div><div class="track"><div class="fill" style="width:${Math.max(0, (100 * (i.value - (i.floor || 0))) / (top - (i.floor || 0))).toFixed(1)}%"></div></div><div class="num">${esc(i.text)}${i.note ? `<span>${esc(i.note)}</span>` : ""}</div></div>`).join("") || `<p class="small">No data for this selection.</p>`;
+}
+
+const tile = (label, value, delta) => `<div class="card tile"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div><div class="delta">${delta || "&nbsp;"}</div></div>`;
+function delta(now, before, unit, goodWhenUp = true) {
+  if (now == null || before == null || !isFinite(before) || before === 0) return "";
+  const diff = unit === "pt" ? now - before : (100 * (now - before)) / Math.abs(before);
+  if (Math.abs(diff) < 0.005) return "no change vs prior period";
+  const cls = (diff > 0) === goodWhenUp ? "up" : "down";
+  return `<span class="${cls}">${diff > 0 ? "▲" : "▼"} ${Math.abs(diff).toFixed(unit === "pt" ? 2 : 1)}${unit === "pt" ? " pt" : "%"}</span> vs prior period`;
+}
+
+/* The months in scope, and the comparison months one year earlier. */
+function scope() {
+  const months = DATA.monthly;
+  if (year !== "All") return { now: months.filter((m) => String(m.year) === year), before: months.filter((m) => String(m.year) === String(Number(year) - 1)) };
+  return { now: months.slice(-12), before: months.slice(-24, -12), all: months };
+}
+function measures(rows) {
+  const tpv = sum(rows, "tpv"), fees = sum(rows, "fees"), txns = sum(rows, "transactions"), approved = sum(rows, "approved");
+  const net = fees - sum(rows, "cost") - sum(rows, "chargeback_losses");
+  return { tpv, fees, net, txns, approved, cost: sum(rows, "cost"), losses: sum(rows, "chargeback_losses"),
+    take: tpv ? (100 * fees) / tpv : null, approval: txns ? (100 * approved) / txns : null,
+    refund: tpv ? (100 * sum(rows, "refunds")) / tpv : null, cbper1000: approved ? (1000 * sum(rows, "chargeback_count")) / approved : null,
+    ticket: sum(rows, "captured") ? tpv / sum(rows, "captured") : null,
+    active: rows.length ? Math.max(...rows.map((r) => r.active_merchants)) : 0 };
+}
+const byYear = (rows) => rows.filter((r) => r.year === year);
+
+function merchantsInScope() {
+  if (year !== "All") return DATA.merchants.filter((m) => m.year === year);
+  const map = new Map();
+  for (const m of DATA.merchants) {
+    const e = map.get(m.name) || { ...m, tpv: 0, fees: 0, refunds: 0, transactions: 0, approved: 0, tpv_py: null };
+    e.tpv += m.tpv; e.fees += m.fees; e.refunds += m.refunds; e.transactions += m.transactions; e.approved += m.approved;
+    map.set(m.name, e);
+  }
+  const list = [...map.values()].sort((a, b) => b.tpv - a.tpv), total = sum(list, "tpv");
+  list.forEach((m, i) => { m.rank = i + 1; m.share = total ? (100 * m.tpv) / total : 0; });
+  return list;
+}
+
+function renderExecutive() {
+  const s = scope(), a = measures(s.now), b = s.before.length ? measures(s.before) : {};
+  const period = year === "All" ? "last 12 months" : year;
+  $("kpis").innerHTML =
+    tile(`Transaction value, ${period}`, usdc(a.tpv), delta(a.tpv, b.tpv)) +
+    tile("Net revenue", usdc(a.net), delta(a.net, b.net)) +
+    tile("Take rate", pct(a.take, 2), delta(a.take, b.take, "pt")) +
+    tile("Approval rate", pct(a.approval, 2), delta(a.approval, b.approval, "pt")) +
+    tile("Refund rate", pct(a.refund, 2), delta(a.refund, b.refund, "pt", false)) +
+    tile("Active merchants", int(a.active), delta(a.active, b.active));
+  if (year === "All") {
+    $("tpvtitle").textContent = "Transaction value by month";
+    $("tpvlegend").innerHTML = `<span><i style="background:var(--s1)"></i>Transaction value</span>`;
+    lineChart($("tpvchart"), s.all.map((m) => monthLabel(m.month)), [{ name: "Transaction value", color: "#3987e5", values: s.all.map((m) => m.tpv) }], { label: "Transaction value by month", tick: usdc, value: usd });
+  } else {
+    const prev = new Map(s.before.map((m) => [m.month.slice(5), m.tpv]));
+    $("tpvtitle").textContent = `Transaction value by month, ${year} against ${Number(year) - 1}`;
+    $("tpvlegend").innerHTML = `<span><i style="background:var(--s1)"></i>${year}</span><span><i style="background:var(--s2)"></i>${Number(year) - 1}</span>`;
+    lineChart($("tpvchart"), s.now.map((m) => monthLabel(m.month).slice(0, 3)), [
+      { name: year, color: "#3987e5", values: s.now.map((m) => m.tpv) },
+      { name: String(Number(year) - 1), color: "#d95926", dash: true, values: s.now.map((m) => prev.get(m.month.slice(5)) ?? null) },
+    ], { label: `Transaction value by month, ${year} against the previous year`, tick: usdc, value: usd });
+  }
+  waterfall($("waterfall"), [
+    { name: "Fee revenue", note: "charged to merchants", from: 0, to: a.fees, amount: a.fees, color: "#3987e5" },
+    { name: "Processing cost", note: "interchange + scheme", from: a.fees, to: a.fees - a.cost, amount: a.cost, sign: "−", color: "#d95926" },
+    { name: "Dispute losses", note: "chargebacks lost", from: a.fees - a.cost, to: a.net, amount: a.losses, sign: "−", color: "#d95926" },
+    { name: "Net revenue", note: pct(a.tpv ? (100 * a.net) / a.tpv : null, 2) + " of value", from: 0, to: a.net, amount: a.net, color: "#3fb37f" },
+  ]);
+  const countries = byYear(DATA.countries), total = sum(countries, "tpv");
+  barRows($("countries"), countries.slice(0, 10).map((c) => ({ name: c.name, value: c.tpv, text: usdc(c.tpv), note: pct((100 * c.tpv) / total) })));
+}
+
+function renderMerchant() {
+  const list = merchantsInScope(), total = sum(list, "tpv"), top10 = list.slice(0, 10), top10share = (100 * sum(top10, "tpv")) / (total || 1);
+  const yoy = (m) => (m.tpv_py ? (100 * (m.tpv - m.tpv_py)) / m.tpv_py : null);
+  const risk = year === "All" ? [] : list.filter((m) => m.tpv_py && yoy(m) < -25).sort((x, y) => (x.tpv - x.tpv_py) - (y.tpv - y.tpv_py));
+  $("mkpis").innerHTML = tile("Merchants with volume", int(list.filter((m) => m.tpv > 0).length)) + tile("Top 10 share of value", pct(top10share)) +
+    tile("Largest merchant share", pct(list[0] ? list[0].share : null)) + tile("Merchants at risk", year === "All" ? "–" : int(risk.length), year === "All" ? "select a year" : "down more than 25%");
+  $("top10").innerHTML = `<tr><th>#</th><th>Merchant</th><th>Category</th><th>Plan</th><th class="r">Value</th><th class="r">vs prior year</th><th style="min-width:120px">Share</th><th class="r">Take rate</th><th class="r">Approval</th></tr>` +
+    top10.map((m) => { const g = yoy(m); return `<tr><td>${m.rank}</td><td>${esc(m.name)}${m.status !== "Active" ? ` <span class="pill" style="color:var(--warn)">${esc(m.status)}</span>` : ""}<div class="small">${esc(m.country)} · ${esc(m.risk_tier)} risk</div></td><td>${esc(m.category)}</td><td>${esc(m.pricing_plan)}</td>
+      <td class="r">${usdc(m.tpv)}</td><td class="r ${g == null ? "" : g >= 0 ? "up" : "down"}">${g == null ? "–" : (g >= 0 ? "+" : "") + g.toFixed(1) + "%"}</td>
+      <td><div class="row" style="grid-template-columns:1fr auto"><div class="track"><div class="fill" style="width:${Math.min(100, (100 * m.share) / (top10[0].share || 1))}%"></div></div><div class="num" style="min-width:44px">${pct(m.share)}</div></div></td>
+      <td class="r">${pct(m.tpv ? (100 * m.fees) / m.tpv : null, 2)}</td><td class="r">${pct(m.transactions ? (100 * m.approved) / m.transactions : null)}</td></tr>`; }).join("");
+  let running = 0; const cumulative = list.map((m) => (running += m.tpv, (100 * running) / (total || 1)));
+  const p80 = cumulative.findIndex((v) => v >= 80) + 1;
+  $("paretonote").textContent = `${p80} of ${list.length} merchants (${pct((100 * p80) / (list.length || 1), 0)}) produce 80% of the transaction value.`;
+  lineChart($("pareto"), list.map((m, i) => "#" + (i + 1)), [{ name: "Cumulative share", color: "#3987e5", values: cumulative }], { label: "Cumulative share of transaction value by merchant rank", height: 230, tick: (v) => v.toFixed(0) + "%", value: (v) => pct(v) });
+  const cats = byYear(DATA.categories), ctotal = sum(cats, "tpv");
+  barRows($("categories"), cats.map((c) => ({ name: c.name, value: c.tpv, text: usdc(c.tpv), note: pct((100 * c.tpv) / ctotal) })));
+  $("atrisk").innerHTML = year === "All" ? `<tr><td class="small">Select a year to compare each merchant with its previous year.</td></tr>` :
+    `<tr><th>Merchant</th><th>Category</th><th class="r">Prior year</th><th class="r">${esc(year)}</th><th class="r">Change</th><th class="r">Value lost</th></tr>` +
+    (risk.slice(0, 15).map((m) => `<tr><td>${esc(m.name)}<div class="small">${esc(m.country)}</div></td><td>${esc(m.category)}</td><td class="r">${usdc(m.tpv_py)}</td><td class="r">${usdc(m.tpv)}</td><td class="r down">${yoy(m).toFixed(1)}%</td><td class="r">${usdc(m.tpv_py - m.tpv)}</td></tr>`).join("") || `<tr><td colspan="6" class="small">No merchant fell by more than 25%.</td></tr>`);
+}
+
+function renderTransaction() {
+  const s = scope(), rows = year === "All" ? s.all : s.now, a = measures(rows);
+  $("tkpis").innerHTML = tile("Payment attempts", int(a.txns)) + tile("Approval rate", pct(a.approval, 2)) + tile("Average ticket", usd(a.ticket, 2)) +
+    tile("Refund rate", pct(a.refund, 2)) + tile("Chargebacks per 1,000", a.cbper1000 == null ? "–" : a.cbper1000.toFixed(2));
+  const approval = (id, key) => { const items = byYear(DATA[key]).map((r) => ({ name: r.name, rate: (100 * r.approved) / r.transactions, n: r.transactions }));
+    const floor = Math.max(0, Math.min(...items.map((i) => i.rate)) - 4);
+    barRows($(id), items.sort((x, y) => y.rate - x.rate).map((i) => ({ name: i.name, value: i.rate, floor, text: pct(i.rate), note: compact(i.n) }))); };
+  approval("methods", "methods"); approval("channels", "channels"); approval("brands", "brands");
+  const d = byYear(DATA.declines), dt = sum(d, "transactions");
+  barRows($("declines"), d.map((r) => ({ name: r.name, value: r.transactions, text: int(r.transactions), note: pct((100 * r.transactions) / dt) })));
+  barRows($("cbreasons"), byYear(DATA.chargeback_reasons).map((r) => ({ name: r.name, value: r.disputes, text: int(r.disputes), note: pct((100 * r.lost) / r.disputes, 0) + " lost" })));
+  const heat = byYear(DATA.heatmap), max = Math.max(...heat.map((h) => h.transactions), 1), cell = new Map(heat.map((h) => [h.dow + "-" + h.hour, h.transactions]));
+  let html = `<div></div>` + [...Array(24).keys()].map((h) => `<div class="hr">${h % 3 === 0 ? h : ""}</div>`).join("");
+  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((name, i) => {
+    html += `<div class="lab">${name}</div>` + [...Array(24).keys()].map((h) => { const v = cell.get(i + 1 + "-" + h) || 0;
+      return `<div style="background:rgba(57,135,229,${(0.08 + 0.92 * (v / max)).toFixed(3)})" title="${name} ${String(h).padStart(2, "0")}:00 · ${int(v)} attempts"></div>`; }).join("");
+  });
+  $("heat").innerHTML = html;
+  lineChart($("riskchart"), rows.map((m) => monthLabel(m.month)), [
+    { name: "Refund rate", color: "#3987e5", values: rows.map((m) => (m.tpv ? (100 * m.refunds) / m.tpv : null)), value: (v) => pct(v, 2) },
+    { name: "Chargebacks per 1,000", color: "#d95926", values: rows.map((m) => (m.approved ? (1000 * m.chargeback_count) / m.approved : null)), value: (v) => v.toFixed(2) },
+  ], { label: "Refund rate and chargebacks per thousand approved payments by month", height: 230, tick: (v) => v.toFixed(1), value: (v) => v.toFixed(2) });
+}
+
+function renderSettlement() {
+  const rows = year === "All" ? DATA.settlement_monthly : DATA.settlement_monthly.filter((m) => String(m.year) === year);
+  const batches = sum(rows, "batches"), bad = sum(rows, "unreconciled"), expected = sum(rows, "expected"), actual = sum(rows, "actual");
+  $("skpis").innerHTML = tile("Settlement batches", int(batches)) + tile("Reconciliation rate", pct(batches ? 100 - (100 * bad) / batches : null, 3)) +
+    tile("Unreconciled batches", int(bad)) + tile("Expected payout", usdc(expected)) + tile("Actual payout", usdc(actual)) +
+    tile("Net variance", usd(actual - expected), `<span>${usd(sum(rows, "absolute_variance"))} in absolute terms</span>`);
+  lineChart($("payout"), rows.map((m) => monthLabel(m.month)), [
+    { name: "Expected payout", color: "#3987e5", values: rows.map((m) => m.expected) },
+    { name: "Actual payout", color: "#d95926", dash: true, values: rows.map((m) => m.actual) },
+  ], { label: "Expected and actual payout by month", tick: usdc, value: (v) => usd(v, 2) });
+  const list = DATA.unreconciled.filter((u) => year === "All" || u.year === year);
+  $("unrecnote").textContent = `Largest ${Math.min(25, list.length)} of ${int(bad)} in this period, by size of variance. Variance is in the settlement currency.`;
+  $("unrec").innerHTML = `<tr><th>Batch</th><th>Date</th><th>Merchant</th><th class="r">Expected</th><th class="r">Paid</th><th class="r">Variance</th><th></th></tr>` +
+    (list.slice(0, 25).map((u) => `<tr><td><code>${esc(u.batch)}</code></td><td style="white-space:nowrap">${longDate(u.date)}</td><td>${esc(u.merchant)}</td><td class="r">${esc(u.currency)} ${Number(u.expected).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td><td class="r">${esc(u.currency)} ${Number(u.actual).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td><td class="r ${u.variance < 0 ? "down" : "up"}">${u.variance > 0 ? "+" : ""}${Number(u.variance).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td><td><span class="pill" style="color:var(--${u.variance < 0 ? "bad" : "warn"})">${u.variance < 0 ? "Underpaid" : "Overpaid"}</span></td></tr>`).join("") || `<tr><td colspan="7" class="small">Every batch in this period reconciled.</td></tr>`);
+  const t = DATA.totals;
+  $("dqnote").textContent = `${int(t.rows_rejected)} of ${int(t.rows_delivered)} delivered rows were quarantined (${pct((100 * t.rows_rejected) / t.rows_delivered, 3)}). All periods.`;
+  $("rejects").innerHTML = `<tr><th>File</th><th>Rule</th><th class="r">Rows</th></tr>` + DATA.rejections.map((r) => `<tr><td>${esc(r.entity)}</td><td>${esc(r.reason)}<div><code>${esc(r.rule)}</code></div></td><td class="r">${int(r.rows)}</td></tr>`).join("");
+  $("dqtiles").innerHTML = tile("Monthly batches loaded", int(t.batches_loaded)) + tile("Rows delivered", compact(t.rows_delivered)) +
+    tile("Controls passed", `${int(t.controls_passed)} / ${int(t.controls_run)}`) + tile("Unknown-merchant payments", int(t.unknown_merchant_payments), "loaded, not rejected") +
+    tile("Unknown-customer payments", int(t.unknown_customer_payments), "loaded, not rejected");
+  $("loadnote").textContent = `Each batch is checked three ways per file: rows delivered against rows landed, rows landed against rows loaded plus quarantined, and amount totals between source and warehouse. Last load finished ${String(t.last_load).slice(0, 16).replace("T", " ")} UTC.`;
+}
+
+const RENDER = { executive: renderExecutive, merchant: renderMerchant, transaction: renderTransaction, settlement: renderSettlement };
+let tab = "executive";
+function render() { RENDER[tab](); }
+function start() {
+  const t = DATA.totals, years = [...new Set(DATA.monthly.map((m) => String(m.year)))];
+  $("year").innerHTML = `<option>All</option>` + years.map((y) => `<option>${y}</option>`).join("");
+  $("range").textContent = `${longDate(t.first_date)} to ${longDate(t.last_date)} · ${int(t.transactions)} payment attempts · ${int(t.merchants)} merchants · ${int(t.settlement_batches)} settlement batches`;
+  $("footer").textContent = `Built ${DATA.generated_at} from the FinSight PostgreSQL warehouse.`;
+  $("year").addEventListener("change", (e) => { year = e.target.value; render(); });
+  $("tabs").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    tab = b.dataset.tab;
+    document.querySelectorAll("#tabs button").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+    document.querySelectorAll("main > section").forEach((s) => (s.hidden = s.id !== tab));
+    render();
+  });
+  let width = window.innerWidth, timer;
+  window.addEventListener("resize", () => { if (window.innerWidth === width) return; width = window.innerWidth; clearTimeout(timer); timer = setTimeout(render, 150); });
+  render();
+}
+if (DATA) start(); else document.querySelector("main").insertAdjacentHTML("beforeend", "<p class='notice'>No data embedded. Build this page with <code>python -m dashboard.build</code>.</p>");
+</script>
+</body>
+</html>
