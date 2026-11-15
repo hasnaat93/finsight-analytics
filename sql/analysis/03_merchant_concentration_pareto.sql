@@ -14,6 +14,6 @@ select
     tpv,
     round(100.0 * tpv / sum(tpv) over (), 2)                                                as share_pct,
     round(100.0 * sum(tpv) over (order by tpv desc rows unbounded preceding) / sum(tpv) over (), 2) as cumulative_share_pct,
-    round(100.0 * (1 - percent_rank() over (order by tpv)), 2)                              as top_percent_of_merchants
+    round((100.0 * (1 - percent_rank() over (order by tpv)))::numeric, 2)                              as top_percent_of_merchants
 from merchant_tpv
 order by tpv_rank;
